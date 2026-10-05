@@ -42,7 +42,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .font-cinzel{font-family:var(--font-cinzel)}
 .font-dev{font-family:var(--font-dev)}
 /* Devanagari breaks apart with letter-spacing and has no true italic */
-:lang(hi){font-family:var(--font-dev)!important;letter-spacing:0!important;font-style:normal!important;text-transform:none!important}
+:lang(hi),:lang(sa){font-family:var(--font-dev)!important;letter-spacing:0!important;font-style:normal!important;text-transform:none!important}
 h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow-strong),0 0 14px var(--color-text-glow-soft)}
 .ink-gold{color:var(--color-gold-ink)!important;text-shadow:0 0 6px var(--color-text-glow),0 0 18px var(--color-text-glow-soft),0 1px 1px rgba(42,26,10,.25)}
 .ink-rose{color:var(--color-rose-accent)}
