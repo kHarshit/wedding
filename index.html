@@ -86,11 +86,17 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 #intro{position:fixed;inset:0;z-index:99990;background:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .8s ease}
 #intro video{width:100%;height:100%;object-fit:cover}
 #intro.gone{opacity:0;pointer-events:none}
-#intro .ring{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:1px solid rgba(255,255,255,.7);animation:introRing 2.2s ease-out infinite}
 #intro .hint{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);white-space:nowrap;padding:10px 18px 10px calc(18px + .45em);border-radius:999px;background:rgba(42,26,10,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-family:var(--font-cinzel);font-size:12px;letter-spacing:.45em;text-transform:uppercase;animation:hintPulse 2.2s ease-in-out infinite}
-@keyframes introRing{0%{transform:scale(.9);opacity:1}70%,100%{transform:scale(1.35);opacity:0}}
 @keyframes hintPulse{0%,100%{opacity:.45}50%{opacity:1}}
-#intro.opening .ring,#intro.opening .hint{animation:none;opacity:0;transition:opacity .45s ease}
+#intro.opening .hint{animation:none;opacity:0;transition:opacity .45s ease}
+/* Couple names over the doors so the first screen reads as a wedding invitation */
+#intro .names{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;color:#fff;pointer-events:none;background:radial-gradient(ellipse min(92vw,640px) 260px at 50% 50%,rgba(26,16,8,.7) 0%,rgba(26,16,8,.46) 55%,transparent 100%);animation:namesIn 1.4s var(--ease-out) backwards;transition:opacity .6s ease}
+#intro .names .pre{font-family:var(--font-dev);font-size:clamp(.95rem,3.6vw,1.15rem);opacity:.92;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+#intro .names .who{margin-top:10px;font-family:var(--font-display);font-weight:400;font-size:clamp(2.6rem,11vw,4.6rem);line-height:1;letter-spacing:-.01em;text-shadow:0 2px 18px rgba(0,0,0,.55),0 0 2px rgba(0,0,0,.3)}
+#intro .names .who .amp{display:block;margin:4px 0;font-style:italic;font-size:.7em;color:#ffe2a0}
+#intro .names .post{margin-top:14px;padding-left:.42em;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.42em;font-size:clamp(.66rem,2.4vw,.8rem);opacity:.92;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+#intro.opening .names{opacity:0}
+@keyframes namesIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
 
 #music{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(24px,env(safe-area-inset-bottom));z-index:9990;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(200,164,93,.35);border-radius:50%;background:rgba(18,11,8,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:opacity .6s ease,transform .6s ease}
 #music .eq{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:18px}
@@ -223,6 +229,9 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 .brackets.b-lg i.tl{top:10px;left:10px}.brackets.b-lg i.tr{top:10px;right:10px}.brackets.b-lg i.bl{bottom:10px;left:10px}.brackets.b-lg i.br{bottom:10px;right:10px}
 .tile .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:300;font-variant-numeric:tabular-nums;font-size:clamp(2.2rem,7vw,3.8rem);line-height:1;letter-spacing:-.04em;color:var(--color-name-text);text-shadow:0 0 30px var(--color-gold-glow-25);z-index:1}
 .tile-wrap .l{position:relative;z-index:1;display:block;margin-top:9px;text-align:center;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.38em;font-size:clamp(.48rem,1.4vw,.62rem);color:var(--color-gold-ink);opacity:.7;padding-left:.38em}
+.timer-done{position:relative;z-index:2;margin-top:clamp(1.6rem,4vw,2.4rem)}
+.timer-done .t{font-family:var(--font-display);font-weight:300;font-style:italic;color:var(--color-name-text);font-size:clamp(2.6rem,9vw,4.5rem);line-height:1;letter-spacing:-.02em}
+.timer-done .s{margin-top:14px;font-family:var(--font-display);font-style:italic;color:var(--color-muted);font-size:clamp(1rem,2.5vw,1.2rem)}
 .tick{display:none;flex-direction:column;align-items:center;gap:9px;padding-top:clamp(1.2rem,3vw,1.8rem)}
 .tick i{width:4px;height:4px;border-radius:50%;background:var(--color-rose-accent)}
 .tick i:last-child{opacity:.35}
@@ -341,7 +350,11 @@ footer .hair{position:absolute;top:0;left:0;right:0}
 
 <div id="intro" aria-label="Enter website">
   <video src="assets/video/intro.mp4" poster="assets/images/doors.webp" playsinline preload="auto"></video>
-  <div class="ring"></div>
+  <div class="names">
+    <p class="pre" lang="hi">शुभ विवाह</p>
+    <h1 class="who">Harshit <span class="amp">&amp;</span> Deeksha</h1>
+    <p class="post">Wedding Invitation</p>
+  </div>
   <div class="hint">Tap To Begin</div>
 </div>
 
@@ -430,7 +443,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
     <div class="glow c1"></div>
     <div class="container">
       
-            <div class="eyebrow reveal" style="transform:translateY(32px)">Until Two Souls Become One</div>
+            <div class="eyebrow reveal" id="countEyebrow" style="transform:translateY(32px)">Until Two Souls Become One</div>
       <div class="timer">
         <div class="tile-wrap reveal" style="transform:translateY(30px)">
           <div class="tile"><div class="brackets"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div><div class="n" id="days">0</div></div>
@@ -451,7 +464,9 @@ footer .hair{position:absolute;top:0;left:0;right:0}
           <div class="tile"><div class="brackets"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div><div class="n" id="seconds">00</div></div>
           <div class="l">Seconds</div>
         </div>
-      </div><div class="scratch-sec reveal" style="transform:translateY(24px)">
+      </div>
+      <div class="timer-done" id="timerDone" hidden><p class="t" id="doneTitle"></p><p class="s" id="doneSub"></p></div>
+      <div class="scratch-sec reveal" style="transform:translateY(24px)">
         <div class="scratch-wrap" id="scratchWrap">
           <div class="scratch-heart">
             <div class="scratch-glow"></div>
@@ -472,7 +487,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
       </div>
       <div class="save-date reveal" style="transform:translateY(16px)">Save The Date</div>
       <a class="btn reveal" style="transform:translateY(16px)" target="_blank" rel="noopener"
-         href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Deeksha%20%26%20Harshit%20Wedding&dates=20270310T180000/20270310T235900&ctz=Asia/Kolkata&location=Radisson%20Hotel%20Gurugram%2C%20MG%20Road">
+         href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Deeksha%20%26%20Harshit%20Wedding&dates=20270310T180000/20270310T235900&ctz=Asia/Kolkata&location=Radisson%20Hotel%20Delhi%20MG%20Road%2C%20New%20Delhi">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3M16 3v3M4 8h16M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><path d="M4 11h16M9 15l2 2 4-4"/></svg>
         <span>Add To Calendar</span>
       </a>
@@ -587,7 +602,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
             <p class="desc">A sacred blessing of turmeric, love &amp; new beginnings.</p>
             <div class="ev-meta">
               <div class="meta"><span>As The Moment Arrives</span><strong>09:00 AM Onwards</strong><span class="sep"></span></div>
-              <div class="meta"><span>At </span><strong>Home Sweet Home</strong><span class="sep"></span></div>
+              <div class="meta"><span>At </span><strong>Noorpur, Bijnor</strong><span class="sep"></span></div>
             </div>
           </div>
         </article>
@@ -602,7 +617,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
             <p class="desc">Dhol, colours &amp; a royal entrance to remember.</p>
             <div class="ev-meta">
               <div class="meta"><span>As The Sun Begins To Set</span><strong>7:00 PM</strong><span class="sep"></span></div>
-              <div class="meta"><span>Through </span><strong>Main Entrance Procession</strong><span class="sep"></span></div>
+              <div class="meta"><span>Through </span><strong>Radisson Main Entrance</strong><span class="sep"></span></div>
             </div>
           </div>
         </article>
@@ -617,7 +632,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
             <p class="desc">Stars, laughter &amp; dinner — celebrating the newlyweds.</p>
             <div class="ev-meta">
               <div class="meta"><span>As The Stars Appear</span><strong>9:00 PM Onwards</strong><span class="sep"></span></div>
-              <div class="meta"><span>Inside </span><strong>the Wedding Hall</strong><span class="sep"></span></div>
+              <div class="meta"><span>Inside </span><strong>Radisson Wedding Hall</strong><span class="sep"></span></div>
             </div>
           </div>
         </article>
@@ -711,12 +726,22 @@ footer .hair{position:absolute;top:0;left:0;right:0}
     var m=document.getElementById("wedding-music");
     if(!m)return;
     musicBtn.style.opacity="1"; musicBtn.style.transform="scale(1)";
-    m.volume=0;
+    m.muted=false; m.volume=.35;
     // Only show the playing state once the browser actually allows playback
     m.play().then(function(){
       setPlaying(true);
-      var r=0, iv=setInterval(function(){r++; m.volume=Math.min(1,r/20); if(r>=20)clearInterval(iv);},70);
+      var r=0, iv=setInterval(function(){r++; m.volume=Math.min(1,.35+r*.0813); if(r>=8)clearInterval(iv);},50);
     }).catch(function(){m.volume=1;setPlaying(false);});
+  }
+
+  // Called from the tap: starts buffering the music during the intro video and
+  // unlocks playback on iOS, so it can start the moment the video ends.
+  function primeMusic(){
+    var m=document.getElementById("wedding-music");
+    if(!m)return;
+    m.preload="auto"; m.muted=true;
+    var p=m.play();
+    if(p&&p.then)p.then(function(){if(!started){m.pause();m.currentTime=0;}}).catch(function(){});
   }
 
   function begin(){
@@ -733,6 +758,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
   function playGate(){
     if(gateStarted)return; gateStarted=true;
     if(!v)return begin();
+    primeMusic();
     // Safety net if the video stalls after the tap (the clip is ~8s long)
     setTimeout(function(){if(!started)begin();},14000);
     try{
@@ -758,8 +784,23 @@ footer .hair{position:absolute;top:0;left:0;right:0}
     else{m.pause();setPlaying(false);}
   });
 
+  var target=new Date("2027-03-10T18:00:00+05:30").getTime(),
+      married=new Date("2027-03-11T06:00:00+05:30").getTime(), // after the night's pheras
+      doneState="";
+  function showDone(state){
+    if(doneState===state)return; doneState=state;
+    var big=state==="married";
+    document.querySelector(".timer").style.display="none";
+    document.getElementById("countEyebrow").textContent=big?"Two Souls, Now One":"Today Two Souls Become One";
+    document.getElementById("doneTitle").textContent=big?"Just Married":"The Big Day Is Here";
+    document.getElementById("doneSub").textContent=big?"Thank you for your love & blessings":"The celebrations have begun";
+    document.getElementById("timerDone").hidden=false;
+  }
   function tick(){
-    var target=new Date("2027-03-10T18:00:00+05:30").getTime(),diff=Math.max(0,target-Date.now()),total=Math.floor(diff/1000);
+    var now=Date.now();
+    if(now>=married)return showDone("married");
+    if(now>=target)return showDone("today");
+    var total=Math.floor((target-now)/1000);
     function w(n,p){return String(n).padStart(p||2,"0")}
     document.getElementById("days").textContent=Math.floor(total/86400);
     document.getElementById("hours").textContent=w(Math.floor(total%86400/3600));
