@@ -1,0 +1,62 @@
+/* Design tokens, reset, typography helpers, layout and reveal animation */
+:root{
+ --color-dark:#fdf6e8;--color-dark2:#faeed7;--color-dark3:#f3e1bb;
+ --color-cream:#2a1a0a;--color-name-text:#1f140a;--color-gold-ink:#1a120a;
+ --color-muted:#6b4a18;--color-subtle:#8a6a35;
+ --color-gold:#a8720e;--color-gold-accent:#a8780f;--color-gold-light:#e0ad3c;--color-gold-dim:#8a6010;
+ --color-gold-border:rgba(192,138,26,.30);--color-gold-border-sm:rgba(192,138,26,.45);
+ --color-gold-border-xs:rgba(192,138,26,.25);--color-gold-border-md:rgba(192,138,26,.75);
+ --color-gold-line:rgba(192,138,26,.60);--color-gold-line-md:rgba(192,138,26,.52);
+ --color-gold-bracket:rgba(192,138,26,.50);--color-gold-shimmer:rgba(192,138,26,.30);
+ --color-gold-glow-03:rgba(192,138,26,.22);--color-gold-glow-04:rgba(192,138,26,.28);
+ --color-gold-glow-05:rgba(192,138,26,.30);--color-gold-glow-06:rgba(192,138,26,.25);
+ --color-gold-glow-08:rgba(192,138,26,.28);--color-gold-glow-20:rgba(192,138,26,.40);
+ --color-gold-glow-25:rgba(192,138,26,.32);--color-gold-glow-35:rgba(192,138,26,.48);
+ --color-gold-glow-40:rgba(192,138,26,.58);--color-gold-glow-65:rgba(192,138,26,.62);
+--color-rose-accent:#b85c7a;--color-rose-wash:rgba(184,92,122,.06);--color-rose-wash-md:rgba(184,92,122,.10);
+  --color-rose-soft:rgba(184,92,122,.40);--color-rose-glow:rgba(184,92,122,.30);
+  --color-rose-faint:rgba(184,92,122,.45);
+  --color-gold-media-border:rgba(232,176,32,.55);
+ --color-surface:rgba(248,232,198,.40);--color-surface-content:rgba(250,238,215,.92);
+ --color-surface-dark:rgba(243,222,175,.94);--color-surface-sm:rgba(232,192,122,.18);
+ --color-surface-xs:rgba(232,192,122,.10);--color-surface-2xs:rgba(232,192,122,.12);
+ --color-surface-hover:rgba(232,192,122,.32);--color-photo-veil-light:rgba(232,192,122,.16);
+ --color-text-glow:rgba(216,148,40,.70);--color-text-glow-soft:rgba(138,30,55,.35);
+ --color-text-glow-strong:rgba(180,36,70,.55);
+ --gradient-rose-joiner:linear-gradient(135deg,#a8720e 0%,#b85c7a 50%,#a8720e 100%);
+ --font-display:"Cormorant Garamond",Georgia,serif;
+ --font-cinzel:"Cinzel",Georgia,serif;
+ --font-body:"Raleway",Arial,sans-serif;
+ --font-dev:"Noto Serif Devanagari",serif;
+ --radius-sm:.25rem;--ease-out:cubic-bezier(0,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--color-dark);color:var(--color-cream);font-family:var(--font-body);font-weight:300;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+::selection{background:var(--color-gold-light);color:var(--color-gold-ink)}
+
+.font-display{font-family:var(--font-display)}
+.font-cinzel{font-family:var(--font-cinzel)}
+.font-dev{font-family:var(--font-dev)}
+/* Devanagari breaks apart with letter-spacing and has no true italic */
+:lang(hi){font-family:var(--font-dev)!important;letter-spacing:0!important;font-style:normal!important;text-transform:none!important}
+h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow-strong),0 0 14px var(--color-text-glow-soft)}
+.ink-gold{color:var(--color-gold-ink)!important;text-shadow:0 0 6px var(--color-text-glow),0 0 18px var(--color-text-glow-soft),0 1px 1px rgba(42,26,10,.25)}
+.ink-rose{color:var(--color-rose-accent)}
+.border-glow{box-shadow:0 0 10px var(--color-text-glow-soft),0 0 22px var(--color-gold-glow-16),inset 0 0 12px var(--color-gold-glow-05)}
+.container{max-width:1180px;margin:0 auto;padding:0 clamp(1rem,6vw,2.5rem)}
+.section{position:relative;overflow:hidden}
+.rad{position:relative}
+.glow{position:absolute;inset:0;pointer-events:none}
+.glow.c1{background:radial-gradient(ellipse 65% 50% at 50% 50%,var(--color-gold-glow-05) 0%,var(--color-rose-wash) 45%,transparent 70%)}
+.glow.c2{background:radial-gradient(ellipse 55% 40% at 50% 50%,var(--color-gold-glow-04) 0%,transparent 100%)}
+.glow.c3{background:radial-gradient(ellipse 80% 40% at 50% 16%,var(--color-gold-glow-08) 0%,var(--color-rose-wash-md) 45%,transparent 70%)}
+.glow.c4{background:radial-gradient(ellipse 62% 42% at 50% 50%,var(--color-gold-glow-05) 0%,var(--color-rose-wash-md) 50%,transparent 72%)}
+.glow.c5{background:radial-gradient(ellipse 60% 50% at 50% 100%,var(--color-gold-glow-05) 0%,var(--color-rose-wash) 50%,transparent 72%)}
+
+.reveal{opacity:0;transition:opacity .7s var(--ease-out),transform .7s var(--ease-out)}
+.reveal.in{opacity:1;transform:none!important}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important}}

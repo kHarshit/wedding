@@ -1,0 +1,49 @@
+/* Countdown, scratch-to-reveal heart and Save the Date */
+.count-sec{padding:clamp(3.5rem,7vw,5.5rem) 0;text-align:center;position:relative}
+.timer{display:flex;justify-content:center;align-items:flex-start;gap:clamp(.4rem,2vw,1.25rem);position:relative;z-index:2;margin-top:clamp(2rem,5vw,3rem)}
+.tile-wrap{display:flex;flex-direction:column;align-items:center}
+.tile{position:relative;width:clamp(76px,19vw,112px);height:clamp(84px,20vw,120px)}
+.tile:before{content:"";position:absolute;inset:0;border-radius:var(--radius-sm);border:1px solid var(--color-gold-border-sm);background:var(--color-surface);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 0 40px var(--color-gold-glow-05),inset 0 0 18px var(--color-gold-glow-03)}
+.tile .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:300;font-variant-numeric:tabular-nums;font-size:clamp(2.2rem,7vw,3.8rem);line-height:1;letter-spacing:-.04em;color:var(--color-name-text);text-shadow:0 0 30px var(--color-gold-glow-25);z-index:1}
+.tile-wrap .l{position:relative;z-index:1;display:block;margin-top:9px;text-align:center;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.38em;font-size:clamp(.48rem,1.4vw,.62rem);color:var(--color-gold-ink);opacity:.7;padding-left:.38em}
+.timer-done{position:relative;z-index:2;margin-top:clamp(1.6rem,4vw,2.4rem)}
+.timer-done .t{font-family:var(--font-display);font-weight:300;font-style:italic;color:var(--color-name-text);font-size:clamp(2.6rem,9vw,4.5rem);line-height:1;letter-spacing:-.02em}
+.timer-done .s{margin-top:14px;font-family:var(--font-display);font-style:italic;color:var(--color-muted);font-size:clamp(1rem,2.5vw,1.2rem)}
+.tick{display:none;flex-direction:column;align-items:center;gap:9px;padding-top:clamp(1.2rem,3vw,1.8rem)}
+.tick i{width:4px;height:4px;border-radius:50%;background:var(--color-rose-accent)}
+.tick i:last-child{opacity:.35}
+@media(min-width:640px){.tick{display:flex}}
+/* ---- Scratch-to-reveal heart ---- */
+.scratch-sec{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;margin:clamp(2rem,5vw,2.8rem) 0 clamp(2.6rem,6vw,4rem)}
+.save-date{position:relative;z-index:2;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.5em;font-size:clamp(.9rem,2.5vw,1.1rem);color:var(--color-gold-dim);padding-left:.5em;margin:0 0 clamp(1.6rem,4.5vw,2.8rem);text-shadow:0 0 22px var(--color-gold-glow-40)}
+.scratch-wrap{position:relative;width:clamp(240px,72vw,400px);aspect-ratio:1;cursor:crosshair;-webkit-tap-highlight-color:transparent}
+.scratch-heart{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.scratch-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,var(--color-rose-glow),transparent 65%);filter:blur(28px);opacity:.1}
+.scratch-clip{position:absolute;inset:0;clip-path:url(#heartClip)}
+.sparkle{position:absolute;pointer-events:none;color:var(--color-gold-light);filter:drop-shadow(0 0 3px var(--color-rose-glow));opacity:0;transition:opacity 0.9s ease}
+.scratch-wrap.open .sparkle{opacity:1}
+.scratch-wrap.open .sparkle:nth-child(1){transition-delay:.55s}
+.scratch-wrap.open .sparkle:nth-child(2){transition-delay:.8s}
+.scratch-wrap.open .sparkle:nth-child(3){transition-delay:1.05s}
+.scratch-wrap.open .sparkle:nth-child(4){transition-delay:1.3s}
+.scratch-edge{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1px var(--color-gold-media-border),inset 0 0 18px var(--color-rose-glow)}
+.scratch-fill{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0 20px clamp(30px,9vw,72px);text-align:center;background:var(--color-rose-accent);background:linear-gradient(155deg,color-mix(in srgb,var(--color-rose-accent) 65%,black) 0%,var(--color-rose-accent) 55%,color-mix(in srgb,var(--color-gold-light) 55%,white) 100%)}
+.scratch-sheen{position:absolute;inset:0;pointer-events:none;background:radial-gradient(at 32% 24%,rgba(109, 6, 6, 0.854) 0%,transparent 55%)}
+.scr-line{position:relative;font-family:var(--font-display);font-style:italic;font-weight:500;font-size:clamp(1.15rem,4.5vw,1.5rem);line-height:1.5;color:rgba(253,246,232,.95);text-shadow:0 1px 6px rgba(0,0,0,.3);max-width:230px}
+.scr-line em{font-size:1.02em;color:var(--color-gold-light)}
+.scratch-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:10;transition:opacity .7s ease}
+.scratch-wrap.open .scratch-canvas{opacity:0;pointer-events:none}
+.scratch-wrap.open{cursor:default}
+#celebrate{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9997}
+.count-sec .eyebrow{margin:0 0 clamp(1.6rem,4vw,2.2rem)}
+/* ---- Dates: countdown through "Add to Calendar" fits on one screen ----
+   Tiles and the heart scale with the visible height (svh), the heart taking what's left */
+.count-sec .eyebrow{margin:0 0 clamp(10px,2svh,2.2rem);letter-spacing:clamp(.22em,1.1vw,.5em)}
+.count-sec .timer{margin-top:0}
+.count-sec .tile{width:clamp(62px,min(19vw,14svh),112px);height:clamp(56px,min(20vw,11svh),120px)}
+.count-sec .tile .n{font-size:clamp(1.6rem,min(7vw,6svh),3.8rem)}
+.count-sec .tile-wrap .l{margin-top:clamp(5px,1svh,9px)}
+.count-sec .scratch-sec{margin:clamp(10px,2.5svh,2.8rem) 0}
+.count-sec .scratch-wrap{width:clamp(150px,min(72vw,calc(78svh - 200px)),400px)}
+.count-sec .save-date{margin-bottom:clamp(8px,2svh,2.8rem)}
+.count-sec .btn{padding-top:clamp(10px,1.6svh,14px);padding-bottom:clamp(10px,1.6svh,14px)}

@@ -1,0 +1,34 @@
+/* Shared pieces: headings, dividers, lotus ornament, corner brackets, button */
+.eyebrow{font-family:var(--font-cinzel);text-transform:uppercase;color:var(--color-gold-accent);letter-spacing:.5em;font-size:clamp(.72rem,1.8vw,.82rem)}
+.h-title{font-family:var(--font-display);font-weight:300;color:var(--color-name-text);font-size:clamp(2.8rem,8vw,5.5rem);line-height:.92;letter-spacing:-.03em}
+.lead{font-family:var(--font-body);font-weight:300;color:var(--color-muted);font-size:clamp(.88rem,2vw,1rem);line-height:1.75;max-width:36em}
+
+.rule{display:flex;align-items:center;justify-content:center;gap:14px}
+.rule .ln{height:1px;flex:0 0 auto}
+.rule .ln.s{width:16px}
+.rule .om{font-family:var(--font-dev);font-size:15px;color:var(--color-gold);opacity:.6;line-height:1}
+.rule .star{font-size:.6rem;color:var(--color-gold);opacity:.7}
+.rule .bar{height:2px;width:18px;background:var(--color-gold-line-md)}
+.hair{height:1px;background:linear-gradient(to right,transparent,var(--color-gold-line-md),transparent)}
+
+/* ---- Section ornament dividers (three lotuses) ---- */
+.lotus-divider{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:12px;padding:clamp(1rem,3.5vw,1.6rem) 0}
+.lotus-divider .ld-line{height:1px;width:80px;flex-shrink:0}
+.lotus-divider .ld-center{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--color-gold)}
+.lotus-divider .ld-center svg{display:block;flex-shrink:0}
+.lotus-divider .ld-center svg.lotus{width:16px;height:16px;opacity:.6}
+.lotus-divider .ld-center svg.heart{width:22px;height:22px;color:var(--color-rose-accent);opacity:.75;filter:drop-shadow(0 0 4px var(--color-rose-faint))}
+.brackets{position:absolute;inset:0;pointer-events:none;z-index:1}
+.brackets i{position:absolute;width:12px;height:12px;border:0 solid var(--color-gold-bracket)}
+.brackets i.tl{top:6px;left:6px;border-top-width:1px;border-left-width:1px}
+.brackets i.tr{top:6px;right:6px;border-top-width:1px;border-right-width:1px}
+.brackets i.bl{bottom:6px;left:6px;border-bottom-width:1px;border-left-width:1px}
+.brackets i.br{bottom:6px;right:6px;border-bottom-width:1px;border-right-width:1px}
+.brackets.b-lg i{width:18px;height:18px}
+.brackets.b-lg i.tl{top:10px;left:10px}.brackets.b-lg i.tr{top:10px;right:10px}.brackets.b-lg i.bl{bottom:10px;left:10px}.brackets.b-lg i.br{bottom:10px;right:10px}
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;overflow:hidden;padding:14px 32px;border:1px solid var(--color-gold-border-sm);transition:border-color .4s ease}
+.btn:before{content:"";position:absolute;inset:0;transform:translateX(-115%) skewX(-12deg);background:linear-gradient(105deg,transparent 30%,var(--color-gold-shimmer) 50%,transparent 70%);transition:transform .7s ease}
+.btn:hover:before{transform:translateX(115%) skewX(-12deg)}
+.btn svg{stroke:var(--color-gold-ink);transition:stroke .4s ease;flex-shrink:0}
+.btn:hover svg{stroke:var(--color-gold-light)}
+.btn span{position:relative;z-index:1;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.42em;font-size:clamp(.6rem,1.6vw,.75rem);color:var(--color-gold-ink);opacity:.9;white-space:nowrap}

@@ -1,0 +1,12 @@
+/* Ganesha blessing */
+#invite{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.gan-outer{width:100%;padding:clamp(3rem,6vw,4.5rem) clamp(1.25rem,6vw,3rem);display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,var(--color-gold-glow-06) 0%,var(--color-rose-wash) 45%,transparent 70%)}
+.gan-in{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:22px;max-width:680px;position:relative}
+.gan-top{position:static;flex-shrink:0;margin-bottom:clamp(.1rem,.4vw,.35rem);width:clamp(60px,20vw,120px);height:1px;background:linear-gradient(to right,transparent,var(--color-gold-line),transparent)}
+.gan-img{display:block;margin:0 auto;width:clamp(135px,31vw,175px);height:clamp(135px,31vw,175px);object-fit:contain}
+.gan-mid{display:flex;align-items:center;justify-content:center;gap:12px}
+.gan-mid .ln{height:1px;width:clamp(40px,12vw,90px)}
+.gan-mid .dot{width:5px;height:5px;border-radius:50%;background:var(--color-gold-accent);opacity:.7}
+.mantra{font-family:var(--font-dev);font-size:clamp(1rem,2.4vw,1.16rem);color:var(--color-cream);letter-spacing:.02em;line-height:2;opacity:.94}
+.gan-cap{font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.25em;color:var(--color-gold-accent);font-size:clamp(.62rem,1.4vw,.72rem)}
+.gan-cap:lang(hi){font-size:clamp(.82rem,2vw,.92rem)}

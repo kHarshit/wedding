@@ -1,0 +1,37 @@
+/* Ambient layers: grain, particles, cursor, music button, corner florals, butterflies */
+.grain{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.035;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:220px 220px}
+#particles{position:fixed;inset:0;z-index:9995;pointer-events:none;overflow:hidden}
+.particle{position:absolute;bottom:-12px;border-radius:50%;background:var(--color-gold-light);opacity:0;animation:floatParticle 8s linear infinite}
+@keyframes floatParticle{0%{transform:translate(0,0);opacity:0}12%{opacity:.55}85%{opacity:.35}100%{transform:translate(var(--dx,0px),-118vh);opacity:0}}
+
+.cursor-dot{position:fixed;top:0;left:0;z-index:100000;width:6px;height:6px;border-radius:50%;background:var(--color-gold-accent);pointer-events:none;transform:translate(-50%,-50%);animation:cursorPulse 2.5s ease-in-out infinite}
+.cursor-ring{position:fixed;top:0;left:0;z-index:99999;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%;border:1.5px solid var(--color-gold-border-md);pointer-events:none;transition:width .3s ease,height .3s ease,border-color .3s ease,left .35s var(--ease-out),top .35s var(--ease-out)}
+.cursor-ring.hovering{width:52px;height:52px;margin:-26px 0 0 -26px;border-color:var(--color-gold-glow-40)}
+.cursor-dot.hidden,.cursor-ring.hidden{opacity:0}
+@keyframes cursorPulse{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.4)}}
+@media (pointer:coarse){.cursor-dot,.cursor-ring{display:none}}
+#music{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(24px,env(safe-area-inset-bottom));z-index:9990;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(200,164,93,.35);border-radius:50%;background:rgba(18,11,8,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:opacity .6s ease,transform .6s ease}
+#music .eq{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:18px}
+#music .eq i{display:block;width:3px;height:18px;border-radius:2px;background:linear-gradient(to top,#9a7430,#e9cf9a);transform-origin:bottom;transform:scaleY(.3);transition:transform .35s ease}
+#music.playing .eq i{animation:eqPulse 1s ease-in-out infinite}
+#music.playing .eq i:nth-child(1){animation-delay:-.4s}
+#music.playing .eq i:nth-child(2){animation-delay:-.15s}
+#music.playing .eq i:nth-child(3){animation-delay:-.55s}
+#music.playing .eq i:nth-child(4){animation-delay:-.3s}
+@media (max-width:640px){#music{left:max(12px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));width:40px;height:40px}#music .eq{height:14px}#music .eq i{height:14px}}
+@keyframes eqPulse{0%,100%{transform:scaleY(.3)}25%{transform:scaleY(1)}50%{transform:scaleY(.5)}75%{transform:scaleY(.85)}}
+
+.corner-floral{position:fixed;pointer-events:none;z-index:9994;transition:opacity 1.2s ease,transform 1.2s ease}
+.corner-floral img{width:clamp(220px,30vw,380px);height:auto;object-fit:contain}
+.corner-floral.tl{top:0;left:0;transform:translate(-24px,-24px)}
+.corner-floral.tr{top:0;right:0;transform:translate(24px,-24px)}
+.corner-floral.bl{bottom:0;left:0;transform:translate(-24px,24px)}
+.corner-floral.bl img{transform:scaleY(-1)}
+.corner-floral.br{bottom:0;right:0;transform:translate(40px,40px)}
+.corner-floral.br img{width:clamp(316px,43vw,547px)}
+.corner-floral.in{opacity:1;transform:none}
+.corner-floral.out{opacity:0}
+/* On phones the florals frame the first screen and scroll away instead of covering content */
+@media (max-width:767px){.corner-floral{position:absolute;z-index:1}.corner-floral img{width:clamp(150px,42vw,220px)}.corner-floral.br img{width:clamp(200px,56vw,300px)}}
+/* ---- Three flying butterflies ---- */
+#flutter{position:fixed;inset:0;z-index:9995;pointer-events:none;overflow:hidden}

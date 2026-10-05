@@ -1,0 +1,16 @@
+/* The Venue */
+.venue-sec{padding:clamp(3.5rem,7vw,5.5rem) 0;position:relative}
+.venue-sec .hair{bottom:0}
+.venue-head{text-align:center;margin-bottom:clamp(2.5rem,6vw,3.5rem)}
+.venue-head .eyebrow{margin-bottom:14px}
+.venue-head .h-title{margin-bottom:22px}
+.map-card{position:relative;display:block;max-width:900px;margin:0 auto;overflow:hidden;border:1px solid var(--color-gold-border-xs);border-radius:var(--radius-sm);cursor:none}
+.map-card iframe{width:100%;height:clamp(300px,50vw,420px);border:0;pointer-events:none;filter:grayscale(35%) sepia(22%) brightness(.8) contrast(1.06)}
+.map-card .tint{position:absolute;inset:0;background:var(--color-surface-2xs);mix-blend-mode:multiply;pointer-events:none}
+.map-card .veil{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--color-surface-hover);opacity:0;transition:opacity .4s ease;backdrop-filter:blur(2px)}
+.map-card:hover .veil,.map-card:focus .veil{opacity:1}
+.map-card .veil span{font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.45em;font-size:.85rem;color:var(--color-gold-light);padding-left:.45em}
+.venue-foot{text-align:center;margin-top:26px}
+.venue-foot p{font-family:var(--font-body);font-weight:300;color:var(--color-muted);font-size:.88rem;line-height:1.8;max-width:54ch;margin:0 auto}
+.venue-foot p a{color:var(--color-gold-accent);border-bottom:1px solid var(--color-gold-border-sm);transition:.3s}
+.venue-foot p a:hover{color:var(--color-gold);border-color:var(--color-gold)}
