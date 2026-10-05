@@ -5,7 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#fdf6e8">
 <title>Harshit &amp; Deeksha — Wedding Invitation</title>
-<meta name="description" content="Step into a timeless beautiful wedding experience for Harshit &amp; Deeksha.">
+<meta name="description" content="Harshit &amp; Deeksha are getting married on 10 March 2027 at Radisson Hotel MG Road, New Delhi. We would love for you to join us.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kharshit.github.io/wedding/">
+<meta property="og:title" content="Harshit &amp; Deeksha — Wedding Invitation">
+<meta property="og:description" content="Wednesday, 10 March 2027 · Radisson Hotel MG Road, New Delhi. We would love for you to join us.">
+<meta property="og:image" content="https://kharshit.github.io/wedding/assets/images/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Harshit and Deeksha">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23fdf6e8' stroke='%23a8720e' stroke-width='2'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Georgia,serif' font-size='26' fill='%23a8720e'%3EH%26amp;D%3C/text%3E%3C/svg%3E">
+<link rel="preload" as="image" href="assets/images/doors.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Raleway:wght@200;300;400;500&family=Noto+Serif+Devanagari:wght@400;500&display=swap" rel="stylesheet">
@@ -52,6 +63,9 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .font-display{font-family:var(--font-display)}
 .font-cinzel{font-family:var(--font-cinzel)}
 .font-dev{font-family:var(--font-dev)}
+/* Devanagari breaks apart with letter-spacing and has no true italic */
+:lang(hi){font-family:var(--font-dev)!important;letter-spacing:0!important;font-style:normal!important;text-transform:none!important}
+.person-label:lang(hi),.gan-cap:lang(hi){font-size:clamp(.82rem,2vw,.92rem)}
 h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow-strong),0 0 14px var(--color-text-glow-soft)}
 .ink-gold{color:var(--color-gold-ink)!important;text-shadow:0 0 6px var(--color-text-glow),0 0 18px var(--color-text-glow-soft),0 1px 1px rgba(42,26,10,.25)}
 .ink-rose{color:var(--color-rose-accent)}
@@ -73,12 +87,12 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 #intro video{width:100%;height:100%;object-fit:cover}
 #intro.gone{opacity:0;pointer-events:none}
 #intro .ring{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:1px solid rgba(255,255,255,.7);animation:introRing 2.2s ease-out infinite}
-#intro .hint{position:absolute;left:0;right:0;bottom:14%;text-align:center;color:rgba(255,255,255,.85);font-family:var(--font-cinzel);font-size:10px;letter-spacing:.45em;text-transform:uppercase;animation:hintPulse 2.2s ease-in-out infinite}
+#intro .hint{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);white-space:nowrap;padding:10px 18px 10px calc(18px + .45em);border-radius:999px;background:rgba(42,26,10,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;font-family:var(--font-cinzel);font-size:12px;letter-spacing:.45em;text-transform:uppercase;animation:hintPulse 2.2s ease-in-out infinite}
 @keyframes introRing{0%{transform:scale(.9);opacity:1}70%,100%{transform:scale(1.35);opacity:0}}
 @keyframes hintPulse{0%,100%{opacity:.45}50%{opacity:1}}
 #intro.opening .ring,#intro.opening .hint{animation:none;opacity:0;transition:opacity .45s ease}
 
-#music{position:fixed;left:20px;bottom:24px;z-index:9990;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(200,164,93,.35);border-radius:50%;background:rgba(18,11,8,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:opacity .6s ease,transform .6s ease}
+#music{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(24px,env(safe-area-inset-bottom));z-index:9990;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(200,164,93,.35);border-radius:50%;background:rgba(18,11,8,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:opacity .6s ease,transform .6s ease}
 #music .eq{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:18px}
 #music .eq i{display:block;width:3px;height:18px;border-radius:2px;background:linear-gradient(to top,#9a7430,#e9cf9a);transform-origin:bottom;transform:scaleY(.3);transition:transform .35s ease}
 #music.playing .eq i{animation:eqPulse 1s ease-in-out infinite}
@@ -86,6 +100,7 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 #music.playing .eq i:nth-child(2){animation-delay:-.15s}
 #music.playing .eq i:nth-child(3){animation-delay:-.55s}
 #music.playing .eq i:nth-child(4){animation-delay:-.3s}
+@media (max-width:640px){#music{left:max(12px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));width:40px;height:40px}#music .eq{height:14px}#music .eq i{height:14px}}
 @keyframes eqPulse{0%,100%{transform:scaleY(.3)}25%{transform:scaleY(1)}50%{transform:scaleY(.5)}75%{transform:scaleY(.85)}}
 
 .corner-floral{position:fixed;pointer-events:none;z-index:9994;transition:opacity 1.2s ease,transform 1.2s ease}
@@ -98,6 +113,8 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 .corner-floral.br img{width:clamp(316px,43vw,547px)}
 .corner-floral.in{opacity:1;transform:none}
 .corner-floral.out{opacity:0}
+/* On phones the florals frame the first screen and scroll away instead of covering content */
+@media (max-width:767px){.corner-floral{position:absolute;z-index:1}.corner-floral img{width:clamp(150px,42vw,220px)}.corner-floral.br img{width:clamp(200px,56vw,300px)}}
 
 .container{max-width:1180px;margin:0 auto;padding:0 clamp(1rem,6vw,2.5rem)}
 .section{position:relative;overflow:hidden}
@@ -137,11 +154,11 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 
 /* ---- Scratch-to-reveal heart ---- */
 .scratch-sec{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;margin:clamp(2rem,5vw,2.8rem) 0 clamp(2.6rem,6vw,4rem)}
-.save-date{position:relative;z-index:2;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.5em;font-size:clamp(.9rem,2.5vw,1.1rem);color:var(--color-gold-light);padding-left:.5em;margin:0 0 clamp(1.6rem,4.5vw,2.8rem);text-shadow:0 0 22px var(--color-gold-glow-40)}
-.scratch-wrap{position:relative;width:340px;height:340px;--heart-target:clamp(300px,72vw,430px);transform:scale(calc(var(--heart-target)/340px));cursor:crosshair;-webkit-tap-highlight-color:transparent}
+.save-date{position:relative;z-index:2;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.5em;font-size:clamp(.9rem,2.5vw,1.1rem);color:var(--color-gold-dim);padding-left:.5em;margin:0 0 clamp(1.6rem,4.5vw,2.8rem);text-shadow:0 0 22px var(--color-gold-glow-40)}
+.scratch-wrap{position:relative;width:clamp(240px,72vw,400px);aspect-ratio:1;cursor:crosshair;-webkit-tap-highlight-color:transparent}
 .scratch-heart{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 .scratch-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,var(--color-rose-glow),transparent 65%);filter:blur(28px);opacity:.1}
-.scratch-clip{position:absolute;inset:0;clip-path:path("M 170 330 C 170 330 20 225 20 120 C 20 60 65 20 115 20 C 148 20 165 38 170 58 C 175 38 192 20 225 20 C 275 20 320 60 320 120 C 320 225 170 330 170 330 Z")}
+.scratch-clip{position:absolute;inset:0;clip-path:url(#heartClip)}
 .sparkle{position:absolute;pointer-events:none;color:var(--color-gold-light);filter:drop-shadow(0 0 3px var(--color-rose-glow));opacity:0;transition:opacity 0.9s ease}
 .scratch-wrap.open .sparkle{opacity:1}
 .scratch-wrap.open .sparkle:nth-child(1){transition-delay:.55s}
@@ -167,7 +184,7 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 .gan-mid{display:flex;align-items:center;justify-content:center;gap:12px}
 .gan-mid .ln{height:1px;width:clamp(40px,12vw,90px)}
 .gan-mid .dot{width:5px;height:5px;border-radius:50%;background:var(--color-gold-accent);opacity:.7}
-.mantra{font-family:var(--font-dev);font-size:clamp(1rem,2.4vw,1.16rem);font-style:italic;color:var(--color-cream);letter-spacing:.02em;line-height:2;opacity:.94}
+.mantra{font-family:var(--font-dev);font-size:clamp(1rem,2.4vw,1.16rem);color:var(--color-cream);letter-spacing:.02em;line-height:2;opacity:.94}
 .gan-cap{font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.25em;color:var(--color-gold-accent);font-size:clamp(.62rem,1.4vw,.72rem)}
 
 /* ---- Invitation card ---- */
@@ -180,7 +197,7 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 .card-corner.br{bottom:12px;right:12px;transform:scale(-1,-1)}
 .person-label{font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.35em;color:var(--color-gold-accent);font-size:clamp(.65rem,1.8vw,.75rem);opacity:.9}
 .person-name{font-family:var(--font-display);font-weight:300;color:var(--color-gold-ink);font-size:clamp(1.6rem,7vw,2.75rem);line-height:1;letter-spacing:-.02em}
-.person-role{font-family:var(--font-display);font-style:italic;color:var(--color-gold-light);font-size:clamp(.88rem,2vw,1rem);opacity:.9;margin-top:10px}
+.person-role{font-family:var(--font-display);font-style:italic;color:var(--color-gold);font-size:clamp(.88rem,2vw,1rem);opacity:.9;margin-top:10px}
 .person-meta{font-size:.9rem;line-height:1.9;color:var(--color-muted);margin-top:12px}
 .person-meta .amp{font-family:var(--font-display);font-style:italic;color:var(--color-gold)}
 .person-city{font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.25em;color:var(--color-gold-accent);font-size:clamp(.62rem,1.6vw,.72rem);opacity:.8;margin-top:6px}
@@ -205,7 +222,7 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 .brackets.b-lg i{width:18px;height:18px}
 .brackets.b-lg i.tl{top:10px;left:10px}.brackets.b-lg i.tr{top:10px;right:10px}.brackets.b-lg i.bl{bottom:10px;left:10px}.brackets.b-lg i.br{bottom:10px;right:10px}
 .tile .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:300;font-variant-numeric:tabular-nums;font-size:clamp(2.2rem,7vw,3.8rem);line-height:1;letter-spacing:-.04em;color:var(--color-name-text);text-shadow:0 0 30px var(--color-gold-glow-25);z-index:1}
-.tile .l{position:relative;z-index:1;display:block;margin-top:9px;text-align:center;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.38em;font-size:clamp(.48rem,1.4vw,.62rem);color:var(--color-gold-ink);opacity:.7;padding-left:.38em}
+.tile-wrap .l{position:relative;z-index:1;display:block;margin-top:9px;text-align:center;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.38em;font-size:clamp(.48rem,1.4vw,.62rem);color:var(--color-gold-ink);opacity:.7;padding-left:.38em}
 .tick{display:none;flex-direction:column;align-items:center;gap:9px;padding-top:clamp(1.2rem,3vw,1.8rem)}
 .tick i{width:4px;height:4px;border-radius:50%;background:var(--color-rose-accent)}
 .tick i:last-child{opacity:.35}
@@ -310,45 +327,44 @@ footer .hair{position:absolute;top:0;left:0;right:0}
 <div class="cursor-dot hidden"></div>
 <div class="cursor-ring hidden"></div>
 
-<audio id="wedding-music" src="Ordinary-piano.mp3" preload="auto" loop></audio>
+<audio id="wedding-music" src="assets/audio/Ordinary-piano.mp3" preload="none" loop></audio>
 
-<button id="music" aria-label="Play music" style="opacity:0;transform:scale(.85)">
+<button id="music" aria-label="Play music" aria-pressed="false" style="opacity:0;transform:scale(.85)">
   <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
 </button>
 
 <div class="grain" aria-hidden="true"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="om" viewBox="0 0 512 512"><path d="M379.625 19.844c-16.74.187-34.18 4.942-50.22 13.625-12.754 6.905-24.542 16.552-34.28 28.5-1.217-1.252-2.578-2.38-3.72-3.69-47.612-54.672-125.46-43.178-160.75 1.345-5.91 4.88-9.686 12.268-9.686 20.53 0 14.692 11.9 26.595 26.593 26.595 14.69 0 26.625-11.903 26.625-26.594 0-10.035-5.578-18.75-13.782-23.28 31.8-23.023 82.904-25.36 116.906 13.687 2.22 2.546 4.53 4.972 6.938 7.312-11.28 19.99-17.145 44.58-13.906 72.78-12.262-16.69-31.758-28.007-55.094-27.5-12.29.27-25.64 3.807-39.563 11.564-60.394 33.638-37.274 103.51-153.375 103.686 47.213 28.976 95.146 41.69 136.938 41.844-14.583 71.33 33.297 162.234 146.813 212-55.354-96.272 18.237-128.528 44.906-186.063 60.407 9.56 105.242-59.912 134.374 53.5 27.68-154.03-86.917-220.388-158.53-211.937-14.422 1.703-26.155 7.967-34.94 17.094-7.646-30.47-3.774-55.575 6.563-75.25 27.31 19.926 61.414 29.575 90.313 29.47 18.49-.07 35.196-3.904 46.875-13.75 11.68-9.85 16.05-26.89 9.375-44.595-8.432-22.363-27.576-35.638-48.97-39.532-5.347-.974-10.825-1.407-16.405-1.344zm.22 18.718c4.457-.065 8.76.29 12.842 1.032 16.328 2.972 28.704 11.517 34.813 27.718 4.736 12.56 2.46 18.326-3.938 23.72-6.396 5.392-19.18 9.285-34.906 9.343-24.812.092-55.875-9.065-79.78-26.47 8.326-10.05 18.477-18.082 29.405-24 13.51-7.312 28.19-11.147 41.564-11.343zm-140.69 128.313c6.397.06 13.328.942 20.907 2.78-72.17 14.765-84.3 99.482-165.156 81.782 70.31-9.934 82.423-85.154 144.25-84.562zm34 19.5c52.567 110.048-67.184 156.03-9.967 257.563-84.856-93.86 23.175-138.69 9.968-257.563zm24.908 3.906c42.292 46.343 133.717-11.018 164.093 90-43.937-71.563-131.402-22.378-164.094-90z"></path></symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><clipPath id="heartClip" clipPathUnits="objectBoundingBox"><path d="M .5 .9706 C .5 .9706 .0588 .6618 .0588 .3529 C .0588 .1765 .1912 .0588 .3382 .0588 C .4353 .0588 .4853 .1118 .5 .1706 C .5147 .1118 .5647 .0588 .6618 .0588 C .8088 .0588 .9412 .1765 .9412 .3529 C .9412 .6618 .5 .9706 .5 .9706 Z"/></clipPath></defs></svg>
 <div id="particles" aria-hidden="true"></div>
 <div id="flutter" aria-hidden="true"></div>
 
 <div id="intro" aria-label="Enter website">
-  <video src="intro.mp4" poster="doors.png" playsinline preload="auto"></video>
+  <video src="assets/video/intro.mp4" poster="assets/images/doors.webp" playsinline preload="auto"></video>
   <div class="ring"></div>
   <div class="hint">Tap To Begin</div>
 </div>
 
 <main style="pointer-events:none;opacity:0">
-  <div class="corner-floral tl out"><img src="cornerflowers.png" alt=""></div>
-  <!--<div class="corner-floral tr out"><img src="cornerflowers.png" alt=""></div>-->
-  <!--<div class="corner-floral bl out"><img src="https://ivory-royal.memorialink.in/images/flowers/bottom-right-bouquet.png" alt=""></div>-->
-  <div class="corner-floral br out"><img src="bottomflowers.png" alt=""></div>
+  <div class="corner-floral tl out"><img src="assets/images/cornerflowers.webp" alt=""></div>
+  <div class="corner-floral br out"><img src="assets/images/bottomflowers.webp" alt=""></div>
 
   <!-- Ganesha -->
   <section class="section" id="invite">
     <div class="gan-outer">
       <div class="gan-in">
         <div class="gan-top"></div>
-        <img class="gan-img reveal" style="transform:scale(.9)" src="https://ivory-royal.memorialink.in/images/ganesha.png" alt="श्री गणेशाय नमः">
+        <img class="gan-img reveal" style="transform:scale(.9)" src="assets/images/ganesha.webp" alt="श्री गणेशाय नमः">
         <div class="gan-mid reveal" style="transform:scaleX(0)">
           <span class="ln" style="background:linear-gradient(to right,transparent,var(--color-gold-line))"></span>
           <span class="dot"></span>
           <span class="ln" style="background:linear-gradient(to left,transparent,var(--color-gold-line))"></span>
         </div>
-        <div class="reveal" style="transform:translateY(20px)">
+        <div class="reveal" lang="hi" style="transform:translateY(20px)">
           <p class="mantra">वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ।</p>
           <p class="mantra">निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा॥</p>
         </div>
-        <span class="gan-cap reveal" style="transform:translateY(20px)">— श्री गणेशाय नमः</span>
+        <span class="gan-cap reveal" lang="hi" style="transform:translateY(20px)">— श्री गणेशाय नमः</span>
       </div>
     </div>
   </section>
@@ -363,7 +379,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
         <svg class="card-corner bl" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M379.625 19.844c-16.74.187-34.18 4.942-50.22 13.625-12.754 6.905-24.542 16.552-34.28 28.5-1.217-1.252-2.578-2.38-3.72-3.69-47.612-54.672-125.46-43.178-160.75 1.345-5.91 4.88-9.686 12.268-9.686 20.53 0 14.692 11.9 26.595 26.593 26.595 14.69 0 26.625-11.903 26.625-26.594 0-10.035-5.578-18.75-13.782-23.28 31.8-23.023 82.904-25.36 116.906 13.687 2.22 2.546 4.53 4.972 6.938 7.312-11.28 19.99-17.145 44.58-13.906 72.78-12.262-16.69-31.758-28.007-55.094-27.5-12.29.27-25.64 3.807-39.563 11.564-60.394 33.638-37.274 103.51-153.375 103.686 47.213 28.976 95.146 41.69 136.938 41.844-14.583 71.33 33.297 162.234 146.813 212-55.354-96.272 18.237-128.528 44.906-186.063 60.407 9.56 105.242-59.912 134.374 53.5 27.68-154.03-86.917-220.388-158.53-211.937-14.422 1.703-26.155 7.967-34.94 17.094-7.646-30.47-3.774-55.575 6.563-75.25 27.31 19.926 61.414 29.575 90.313 29.47 18.49-.07 35.196-3.904 46.875-13.75 11.68-9.85 16.05-26.89 9.375-44.595-8.432-22.363-27.576-35.638-48.97-39.532-5.347-.974-10.825-1.407-16.405-1.344zm.22 18.718c4.457-.065 8.76.29 12.842 1.032 16.328 2.972 28.704 11.517 34.813 27.718 4.736 12.56 2.46 18.326-3.938 23.72-6.396 5.392-19.18 9.285-34.906 9.343-24.812.092-55.875-9.065-79.78-26.47 8.326-10.05 18.477-18.082 29.405-24 13.51-7.312 28.19-11.147 41.564-11.343zm-140.69 128.313c6.397.06 13.328.942 20.907 2.78-72.17 14.765-84.3 99.482-165.156 81.782 70.31-9.934 82.423-85.154 144.25-84.562zm34 19.5c52.567 110.048-67.184 156.03-9.967 257.563-84.856-93.86 23.175-138.69 9.968-257.563zm24.908 3.906c42.292 46.343 133.717-11.018 164.093 90-43.937-71.563-131.402-22.378-164.094-90z"></path></svg>
         <svg class="card-corner br" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M379.625 19.844c-16.74.187-34.18 4.942-50.22 13.625-12.754 6.905-24.542 16.552-34.28 28.5-1.217-1.252-2.578-2.38-3.72-3.69-47.612-54.672-125.46-43.178-160.75 1.345-5.91 4.88-9.686 12.268-9.686 20.53 0 14.692 11.9 26.595 26.593 26.595 14.69 0 26.625-11.903 26.625-26.594 0-10.035-5.578-18.75-13.782-23.28 31.8-23.023 82.904-25.36 116.906 13.687 2.22 2.546 4.53 4.972 6.938 7.312-11.28 19.99-17.145 44.58-13.906 72.78-12.262-16.69-31.758-28.007-55.094-27.5-12.29.27-25.64 3.807-39.563 11.564-60.394 33.638-37.274 103.51-153.375 103.686 47.213 28.976 95.146 41.69 136.938 41.844-14.583 71.33 33.297 162.234 146.813 212-55.354-96.272 18.237-128.528 44.906-186.063 60.407 9.56 105.242-59.912 134.374 53.5 27.68-154.03-86.917-220.388-158.53-211.937-14.422 1.703-26.155 7.967-34.94 17.094-7.646-30.47-3.774-55.575 6.563-75.25 27.31 19.926 61.414 29.575 90.313 29.47 18.49-.07 35.196-3.904 46.875-13.75 11.68-9.85 16.05-26.89 9.375-44.595-8.432-22.363-27.576-35.638-48.97-39.532-5.347-.974-10.825-1.407-16.405-1.344zm.22 18.718c4.457-.065 8.76.29 12.842 1.032 16.328 2.972 28.704 11.517 34.813 27.718 4.736 12.56 2.46 18.326-3.938 23.72-6.396 5.392-19.18 9.285-34.906 9.343-24.812.092-55.875-9.065-79.78-26.47 8.326-10.05 18.477-18.082 29.405-24 13.51-7.312 28.19-11.147 41.564-11.343zm-140.69 128.313c6.397.06 13.328.942 20.907 2.78-72.17 14.765-84.3 99.482-165.156 81.782 70.31-9.934 82.423-85.154 144.25-84.562zm34 19.5c52.567 110.048-67.184 156.03-9.967 257.563-84.856-93.86 23.175-138.69 9.968-257.563zm24.908 3.906c42.292 46.343 133.717-11.018 164.093 90-43.937-71.563-131.402-22.378-164.094-90z"></path></svg>
 
-        <div class="person-label reveal" style="transform:translateY(14px)">वर परिचय</div>
+        <div class="person-label reveal" lang="hi" style="transform:translateY(14px)">वर परिचय</div>
         <h2 class="person-name reveal" style="transform:translateY(14px);margin-top:14px">Harshit</h2>
         <div class="person-role reveal" style="transform:translateY(14px)">The Groom</div>
         <div class="person-meta reveal" style="transform:translateY(14px)">
@@ -371,13 +387,13 @@ footer .hair{position:absolute;top:0;left:0;right:0}
           <span class="amp">&amp;</span><br>
           Sh. Gambhir Singh
         </div>
-        <div class="person-city reveal" style="transform:translateY(14px)">[Noorpur (Bijnor), UP]</div>
+        <div class="person-city reveal" style="transform:translateY(14px)">Noorpur (Bijnor), UP</div>
 
         <div class="card-divider reveal" style="transform:translateY(14px)">
           <span class="ln"></span><span class="amp">&amp;</span><span class="ln r"></span>
         </div>
 
-        <div class="person-label reveal" style="transform:translateY(14px)">वधू परिचय</div>
+        <div class="person-label reveal" lang="hi" style="transform:translateY(14px)">वधू परिचय</div>
         <h2 class="person-name reveal" style="transform:translateY(14px);margin-top:14px">Deeksha</h2>
         <div class="person-role reveal" style="transform:translateY(14px)">The Bride</div>
         <div class="person-meta reveal" style="transform:translateY(14px)">
@@ -385,7 +401,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
           <span class="amp">&amp;</span><br>
           Sh. Ajay Kumar Kalia
         </div>
-        <div class="person-city reveal" style="transform:translateY(14px)">[Gurugram, HR]</div>
+        <div class="person-city reveal" style="transform:translateY(14px)">Gurugram, HR</div>
 
         <div class="card-close reveal" style="transform:translateY(14px)">
           <div class="rule">
@@ -393,7 +409,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
             <span class="star">✦</span>
             <span class="ln s" style="background:linear-gradient(to left,transparent,var(--color-gold-glow-35))"></span>
           </div>
-          <p>सर्वे भवन्तु सुखिनः — May all be happy.</p>
+          <p><span lang="hi">सर्वे भवन्तु सुखिनः</span> — May all be happy.</p>
         </div>
       </div>
     </div>
@@ -492,7 +508,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
         <div class="portrait reveal" style="transform:translateX(-40px)">
           <div class="frame"><div class="brackets b-lg"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div></div>
           <div class="box">
-            <img src="img.png" alt="Deeksha &amp; Harshit">
+            <img src="assets/images/img.webp" alt="Deeksha &amp; Harshit">
             <div class="veil"></div>
             <div class="chip">Deeksha <span class="amp">&amp;</span> Harshit</div>
           </div>
@@ -564,20 +580,20 @@ footer .hair{position:absolute;top:0;left:0;right:0}
         <div class="ev-spine"></div>
 
         <article class="event reveal" style="transform:translateY(40px)">
-          <div class="ev-img"><img src="haldi.png" alt="Haldi"></div>
+          <div class="ev-img"><img src="assets/images/haldi.webp" alt="Haldi"></div>
           <div class="ev-copy">
             <div class="ev-top"><span class="bar"></span><span class="ev-date">Tuesday · March 9, 2027</span></div>
             <h3>Haldi</h3>
             <p class="desc">A sacred blessing of turmeric, love &amp; new beginnings.</p>
             <div class="ev-meta">
-              <div><span>As The Moment Arrives </span><strong>09:00 AM Onwards</strong><span class="sep"></span></div>
-              <div><span>At </span><strong>Home Sweet Home</strong><span class="sep"></span></div>
+              <div class="meta"><span>As The Moment Arrives</span><strong>09:00 AM Onwards</strong><span class="sep"></span></div>
+              <div class="meta"><span>At </span><strong>Home Sweet Home</strong><span class="sep"></span></div>
             </div>
           </div>
         </article>
 
         <article class="event rev reveal" style="transform:translateY(40px)">
-          <div class="ev-img"><img src="https://ivory-royal.memorialink.in/images/venues/baraat.jpg" alt="Baraat"></div>
+          <div class="ev-img"><img src="assets/images/baraat.webp" alt="Baraat"></div>
           <div class="ev-copy">
             <div class="ev-top"><span class="bar"></span><span class="ev-date">Wednesday · March 10, 2027</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 12l6-4M3 12h9"/></svg>
@@ -585,23 +601,23 @@ footer .hair{position:absolute;top:0;left:0;right:0}
             <h3>Baraat</h3>
             <p class="desc">Dhol, colours &amp; a royal entrance to remember.</p>
             <div class="ev-meta">
-              <div><span>As The Sun Begins To Set </span><strong>7:00 PM</strong><span class="sep"></span></div>
-              <div><span>Through </span><strong>Main Enterance Procession</strong><span class="sep"></span></div>
+              <div class="meta"><span>As The Sun Begins To Set</span><strong>7:00 PM</strong><span class="sep"></span></div>
+              <div class="meta"><span>Through </span><strong>Main Entrance Procession</strong><span class="sep"></span></div>
             </div>
           </div>
         </article>
 
         <article class="event reveal" style="transform:translateY(40px)">
-          <div class="ev-img"><img src="https://ivory-royal.memorialink.in/images/venues/reception.jpg" alt="Celebration"></div>
+          <div class="ev-img"><img src="assets/images/reception.webp" alt="Celebration"></div>
           <div class="ev-copy">
             <div class="ev-top"><span class="bar"></span><span class="ev-date">Wednesday · March 10, 2027</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z"/><path d="M12 6v6l4 2"/></svg>
             </div>
             <h3>Celebration</h3>
-            <p class="desc">Stars, laughter &amp; dinner — celebrating the newly weds.</p>
+            <p class="desc">Stars, laughter &amp; dinner — celebrating the newlyweds.</p>
             <div class="ev-meta">
-              <div><span>As The Stars Appear</span><strong> 9:00 PM Onwards </strong><span class="sep"></span></div>
-              <div><span>Inside </span><strong>the Wedding Hall</strong><span class="sep"></span><small></small></div>
+              <div class="meta"><span>As The Stars Appear</span><strong>9:00 PM Onwards</strong><span class="sep"></span></div>
+              <div class="meta"><span>Inside </span><strong>the Wedding Hall</strong><span class="sep"></span></div>
             </div>
           </div>
         </article>
@@ -656,7 +672,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
         <span class="bar" style="width:14px"></span>
         <span class="ln s" style="width:56px;background:linear-gradient(to left,transparent,var(--color-gold-line-md))"></span>
       </div>
-      <div class="f-sub reveal" style="transform:translateY(20px)">शुभं भवतु</div>
+      <div class="f-sub reveal" lang="hi" style="transform:translateY(20px)">शुभं भवतु</div>
 
       <div class="social reveal" style="transform:translateY(20px)">
         <a href="https://instagram.com/harshit.kr1" target="_blank" rel="noopener">
@@ -685,13 +701,22 @@ footer .hair{position:absolute;top:0;left:0;right:0}
   var gateStarted=false;
   var v=document.querySelector("#intro video");
 
+  function setPlaying(on){
+    musicBtn.classList.toggle("playing",on);
+    musicBtn.setAttribute("aria-pressed",on?"true":"false");
+    musicBtn.setAttribute("aria-label",on?"Pause music":"Play music");
+  }
+
   function startMusic(){
     var m=document.getElementById("wedding-music");
     if(!m)return;
-    m.volume=0; m.play().catch(function(){});
-    musicBtn.classList.add("playing");
     musicBtn.style.opacity="1"; musicBtn.style.transform="scale(1)";
-    var r=0, iv=setInterval(function(){r++; m.volume=Math.min(1,r/20); if(r>=20)clearInterval(iv);},70);
+    m.volume=0;
+    // Only show the playing state once the browser actually allows playback
+    m.play().then(function(){
+      setPlaying(true);
+      var r=0, iv=setInterval(function(){r++; m.volume=Math.min(1,r/20); if(r>=20)clearInterval(iv);},70);
+    }).catch(function(){m.volume=1;setPlaying(false);});
   }
 
   function begin(){
@@ -708,6 +733,8 @@ footer .hair{position:absolute;top:0;left:0;right:0}
   function playGate(){
     if(gateStarted)return; gateStarted=true;
     if(!v)return begin();
+    // Safety net if the video stalls after the tap (the clip is ~8s long)
+    setTimeout(function(){if(!started)begin();},14000);
     try{
       v.muted=false; v.volume=1;
       var p=v.play();
@@ -724,16 +751,11 @@ footer .hair{position:absolute;top:0;left:0;right:0}
     v.addEventListener("ended",begin);
     v.addEventListener("error",begin);
   }
-  setTimeout(function(){
-    if(started)return;
-    if(!gateStarted)begin();
-    else if(v&&v.paused&&!v.ended&&!v.duration)begin();
-  },14000);
 
   musicBtn.addEventListener("click",function(){
     var m=document.getElementById("wedding-music");
-    if(m.paused){m.play().then(function(){musicBtn.classList.add("playing")}).catch(function(){});}
-    else{m.pause();musicBtn.classList.remove("playing");}
+    if(m.paused){m.play().then(function(){setPlaying(true)}).catch(function(){});}
+    else{m.pause();setPlaying(false);}
   });
 
   function tick(){
@@ -856,7 +878,7 @@ footer .hair{position:absolute;top:0;left:0;right:0}
     }
     function getPos(e){
       var r=canvas.getBoundingClientRect();
-      return {x:(e.clientX||e.touches[0].clientX)-r.left,y:(e.clientY||e.touches[0].clientY)-r.top};
+      return {x:e.clientX-r.left,y:e.clientY-r.top};
     }
     function celebrate(){
       if(document.getElementById("celebrate"))return;
