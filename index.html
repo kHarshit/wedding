@@ -238,6 +238,17 @@ h1,h2,h3,h4,.font-display,.font-cinzel{text-shadow:0 0 4px var(--color-text-glow
 @media(min-width:640px){.tick{display:flex}}
 .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;overflow:hidden;padding:14px 32px;border:1px solid var(--color-gold-border-sm);transition:border-color .4s ease}
 .count-sec .eyebrow{margin:0 0 clamp(1.6rem,4vw,2.2rem)}
+/* ---- Dates: countdown through "Add to Calendar" fits on one screen ----
+   Tiles and the heart scale with the visible height (svh), the heart taking what's left */
+.count-sec .eyebrow{margin:0 0 clamp(10px,2svh,2.2rem);letter-spacing:clamp(.22em,1.1vw,.5em)}
+.count-sec .timer{margin-top:0}
+.count-sec .tile{width:clamp(62px,min(19vw,14svh),112px);height:clamp(56px,min(20vw,11svh),120px)}
+.count-sec .tile .n{font-size:clamp(1.6rem,min(7vw,6svh),3.8rem)}
+.count-sec .tile-wrap .l{margin-top:clamp(5px,1svh,9px)}
+.count-sec .scratch-sec{margin:clamp(10px,2.5svh,2.8rem) 0}
+.count-sec .scratch-wrap{width:clamp(150px,min(72vw,calc(78svh - 200px)),400px)}
+.count-sec .save-date{margin-bottom:clamp(8px,2svh,2.8rem)}
+.count-sec .btn{padding-top:clamp(10px,1.6svh,14px);padding-bottom:clamp(10px,1.6svh,14px)}
 .btn:before{content:"";position:absolute;inset:0;transform:translateX(-115%) skewX(-12deg);background:linear-gradient(105deg,transparent 30%,var(--color-gold-shimmer) 50%,transparent 70%);transition:transform .7s ease}
 .btn:hover:before{transform:translateX(115%) skewX(-12deg)}
 .btn svg{stroke:var(--color-gold-ink);transition:stroke .4s ease;flex-shrink:0}
