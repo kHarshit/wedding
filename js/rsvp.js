@@ -1,19 +1,16 @@
-/* RSVP form: saves responses to a Google Sheet; WhatsApp as an alternative */
+/* RSVP form: saves responses to a Google Sheet */
 (function(){
   "use strict";
 
   // ---- Setup (see README.md → "RSVP setup") ----
   // Web app URL from deploying apps-script/rsvp.gs, e.g. "https://script.google.com/macros/s/…/exec"
-  var RSVP_ENDPOINT="";
-  // WhatsApp number that receives RSVPs: country code + number, digits only, e.g. "919876543210"
-  var WHATSAPP_NUMBER="";
+  var RSVP_ENDPOINT="https://script.google.com/macros/s/AKfycbzu0Jabva4XvmYrRRS3HW6dKD1TynezegbDzLdKQfXy-8NPc0X8JrXD8m-CXx-m4TcU/exec";
 
   var form=document.getElementById("rsvpForm");
   if(!form)return;
   var status=form.querySelector(".rsvp-status"),
       nameIn=form.elements.name, guestsIn=form.elements.guests,
-      buttons=[].slice.call(form.querySelectorAll("button[type=submit]")),
-      alt=document.getElementById("rsvpAlt"), wa=document.getElementById("rsvpWhatsApp");
+      buttons=[].slice.call(form.querySelectorAll("button[type=submit]"));
 
   function say(msg,isError){status.textContent=msg;status.classList.toggle("error",!!isError)}
   function guests(){var n=parseInt(guestsIn.value,10);return n>=1&&n<=20?n:""}
@@ -27,25 +24,13 @@
     form.appendChild(c);
   }
 
-  // WhatsApp: pre-fill the message with whatever the guest has typed
-  if(WHATSAPP_NUMBER){
-    alt.hidden=false;
-    wa.addEventListener("click",function(){
-      var lines=["Namaste! RSVP for Harshit & Deeksha's wedding (10 March 2027).",
-                 "Name: "+(nameIn.value.trim()||""),
-                 "Number of guests: "+(guests()||""),
-                 "Attending: Yes"];
-      wa.href="https://wa.me/"+WHATSAPP_NUMBER+"?text="+encodeURIComponent(lines.join("\n"));
-    });
-  }
-
   form.addEventListener("submit",function(e){
     e.preventDefault();
     var attending=(e.submitter&&e.submitter.value)||"Yes", name=nameIn.value.trim();
     nameIn.setAttribute("aria-invalid",name?"false":"true");
     if(!name){say("Please enter your name.",true);nameIn.focus();return;}
     if(form.elements.website.value)return; // bot
-    if(!RSVP_ENDPOINT){say("RSVP isn't connected yet"+(WHATSAPP_NUMBER?" — please use WhatsApp below.":"."),true);return;}
+    if(!RSVP_ENDPOINT){say("RSVP isn't connected yet.",true);return;}
 
     buttons.forEach(function(b){b.disabled=true});
     say("Sending…");
@@ -55,7 +40,6 @@
       .then(function(res){
         if(!res||!res.ok)throw new Error("not saved");
         form.classList.add("done");
-        alt.hidden=true;
         if(attending==="Yes")showCalendar();
         say(attending==="Yes"
           ?"Thank you, "+name+"! We can't wait to celebrate with you."
@@ -63,7 +47,7 @@
       })
       .catch(function(){
         buttons.forEach(function(b){b.disabled=false});
-        say("Sorry, that didn't go through. Please try again"+(WHATSAPP_NUMBER?" or RSVP on WhatsApp.":"."),true);
+        say("Sorry, that didn't go through. Please try again.",true);
       });
   });
 })();

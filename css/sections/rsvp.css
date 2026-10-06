@@ -15,8 +15,8 @@
 .field input:focus{border-bottom-color:var(--color-gold)}
 .field input[aria-invalid="true"]{border-bottom-color:var(--color-rose-accent)}
 .rsvp-card .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
-.rsvp-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:6px}
-.rsvp-actions .btn{flex:1 1 180px;padding-left:18px;padding-right:18px}
+.rsvp-actions{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.rsvp-actions .btn{width:100%;padding-left:18px;padding-right:18px}
 .rsvp-actions .btn span{letter-spacing:.28em}
 .btn-solid{background:var(--color-gold-dim);border-color:var(--color-gold-dim)}
 .btn-solid span{color:#fff8ee}
@@ -25,7 +25,4 @@
 .rsvp-status.error{color:var(--color-rose-accent)}
 .rsvp-card.done .field,.rsvp-card.done .rsvp-actions{display:none}
 .rsvp-card.done .rsvp-status{font-size:clamp(1.2rem,3.5vw,1.5rem);color:var(--color-name-text)}
-.rsvp-alt{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:clamp(1.6rem,4vw,2.2rem)}
-.rsvp-alt[hidden]{display:none}
-.rsvp-alt .or{font-family:var(--font-display);font-style:italic;color:var(--color-subtle)}
 .rsvp-card .rsvp-cal{align-self:center}

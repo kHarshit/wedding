@@ -14,7 +14,6 @@ RSVPs from the form are saved to a Google Sheet you own.
 
    then **Deploy** and approve the permissions prompt.
 4. Copy the **Web app URL** (ends in `/exec`) into `RSVP_ENDPOINT` at the top of [`js/rsvp.js`](js/rsvp.js).
-5. Optionally set `WHATSAPP_NUMBER` in the same file (country code + number, digits only, e.g. `919876543210`) to show the "RSVP on WhatsApp" button.
 
 Responses appear in a tab named **RSVPs** with the time, name, attending (Yes/No) and number of guests.
 If you change `rsvp.gs` later, use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
