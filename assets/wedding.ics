@@ -1,0 +1,27 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Harshit & Deeksha//Wedding Invitation//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:harshit-deeksha-wedding-20270310@kharshit.github.io
+DTSTAMP:20261006T000000Z
+DTSTART:20270310T123000Z
+DTEND:20270310T182900Z
+SUMMARY:Harshit & Deeksha Wedding
+LOCATION:Radisson Hotel Delhi MG Road\, New Delhi
+DESCRIPTION:Baraat 7:00 PM · Celebration 9:00 PM\nhttps://kharshit.github.
+ io/wedding/
+URL:https://kharshit.github.io/wedding/
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Harshit & Deeksha's wedding is in 15 days
+TRIGGER:-P15D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Harshit & Deeksha's wedding is tomorrow
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+END:VCALENDAR

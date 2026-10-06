@@ -46,4 +46,8 @@
 .count-sec .scratch-sec{margin:clamp(10px,2.5svh,2.8rem) 0}
 .count-sec .scratch-wrap{width:clamp(150px,min(72vw,calc(78svh - 200px)),400px)}
 .count-sec .save-date{margin-bottom:clamp(8px,2svh,2.8rem)}
+/* Two equal-width calendar buttons: side by side, stacked on phones */
+.cal-links{position:relative;z-index:2;display:inline-grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.cal-links{grid-template-columns:1fr}}
+.cal-links .btn{padding-left:22px;padding-right:22px}
 .count-sec .btn{padding-top:clamp(10px,1.6svh,14px);padding-bottom:clamp(10px,1.6svh,14px)}

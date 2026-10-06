@@ -14,12 +14,12 @@
 
   function say(msg,isError){status.textContent=msg;status.classList.toggle("error",!!isError)}
   function guests(){var n=parseInt(guestsIn.value,10);return n>=1&&n<=20?n:""}
-  // After accepting, offer the same "Add to Calendar" button as the dates section
+  // After accepting, offer the same calendar buttons as the dates section
   function showCalendar(){
-    var cal=document.querySelector('.count-sec a.btn[href*="calendar.google.com"]');
+    var cal=document.querySelector(".count-sec .cal-links");
     if(!cal||form.querySelector(".rsvp-cal"))return;
     var c=cal.cloneNode(true);
-    c.classList.remove("reveal");c.removeAttribute("style");c.style.cursor=cal.style.cursor;
+    c.classList.remove("reveal");c.removeAttribute("style");
     c.classList.add("rsvp-cal");
     form.appendChild(c);
   }
