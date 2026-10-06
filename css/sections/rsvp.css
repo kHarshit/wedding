@@ -1,0 +1,31 @@
+/* RSVP */
+.rsvp-sec{padding:clamp(3.5rem,7vw,5.5rem) 0;text-align:center}
+.rsvp-head{max-width:640px;margin:0 auto clamp(2.2rem,5vw,3rem)}
+.rsvp-head .eyebrow{margin-bottom:14px}
+.rsvp-head .h-title{margin-bottom:22px}
+.rsvp-head .rule{margin-bottom:22px}
+.rsvp-head .lead{margin:0 auto}
+.rsvp-card{position:relative;z-index:2;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:22px;padding:clamp(2rem,6vw,2.75rem) clamp(1.5rem,6vw,2.5rem);text-align:left;background:var(--color-surface-content);border:1px solid var(--color-gold-border-sm);border-radius:var(--radius-sm);box-shadow:0 0 36px var(--color-gold-glow-03)}
+.field{display:flex;flex-direction:column;gap:8px}
+.field-label{font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.24em;font-size:.68rem;color:var(--color-gold-accent)}
+.field-label em{font-family:var(--font-body);font-style:normal;text-transform:none;letter-spacing:.02em;color:var(--color-subtle)}
+.field input{width:100%;padding:8px 2px;font-family:var(--font-display);font-size:1.25rem;color:var(--color-name-text);background:transparent;border:0;border-bottom:1px solid var(--color-gold-border-sm);border-radius:0;outline:none;transition:border-color .3s ease;-moz-appearance:textfield}
+.field input::-webkit-outer-spin-button,.field input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.field input::placeholder{color:var(--color-subtle);opacity:.55}
+.field input:focus{border-bottom-color:var(--color-gold)}
+.field input[aria-invalid="true"]{border-bottom-color:var(--color-rose-accent)}
+.rsvp-card .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.rsvp-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:6px}
+.rsvp-actions .btn{flex:1 1 180px;padding-left:18px;padding-right:18px}
+.rsvp-actions .btn span{letter-spacing:.28em}
+.btn-solid{background:var(--color-gold-dim);border-color:var(--color-gold-dim)}
+.btn-solid span{color:#fff8ee}
+.rsvp-actions .btn[disabled]{opacity:.55;cursor:default}
+.rsvp-status{min-height:1.4em;text-align:center;font-family:var(--font-display);font-style:italic;font-size:1.05rem;color:var(--color-muted)}
+.rsvp-status.error{color:var(--color-rose-accent)}
+.rsvp-card.done .field,.rsvp-card.done .rsvp-actions{display:none}
+.rsvp-card.done .rsvp-status{font-size:clamp(1.2rem,3.5vw,1.5rem);color:var(--color-name-text)}
+.rsvp-alt{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:clamp(1.6rem,4vw,2.2rem)}
+.rsvp-alt[hidden]{display:none}
+.rsvp-alt .or{font-family:var(--font-display);font-style:italic;color:var(--color-subtle)}
+.rsvp-card .rsvp-cal{align-self:center}
