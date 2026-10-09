@@ -525,6 +525,25 @@ export function onionDome(R, y0, color, seg) {
   return merge(parts);
 }
 
+// A stone jaali: eight-pointed stars and crosses cut through sandstone.
+export function jaaliTexture(base) {
+  var c = document.createElement('canvas'); c.width = c.height = 256;
+  var x = c.getContext('2d');
+  x.fillStyle = base || '#e8c49a'; x.fillRect(0, 0, 256, 256);
+  x.globalCompositeOperation = 'destination-out';
+  var n = 6, s = 256 / n;
+  for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) {
+    var cx = (i + 0.5) * s, cy = (j + 0.5) * s;
+    x.beginPath();
+    for (var k = 0; k < 16; k++) { var a = k / 16 * Math.PI * 2, rr = k % 2 ? s * 0.2 : s * 0.38; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+    x.closePath(); x.fill();
+    // Small diamonds between the stars.
+    x.beginPath(); x.moveTo(i * s, j * s - s * 0.09); x.lineTo(i * s + s * 0.09, j * s); x.lineTo(i * s, j * s + s * 0.09); x.lineTo(i * s - s * 0.09, j * s); x.closePath(); x.fill();
+  }
+  var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
 // ── Rangoli: painted once on a canvas ────────────────────────────────────
 var rangoliTex = null;
 export function rangoliTexture() {

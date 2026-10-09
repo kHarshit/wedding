@@ -12,6 +12,8 @@
  *  - The loop stops while the tab is hidden and slows when nothing has moved
  *    for a while. With prefers-reduced-motion the clock stands still and a
  *    frame is drawn only when something changes.
+ *  - The page's ink follows the hour: --world-ink, --world-ink-soft,
+ *    --world-card(-strong) and --world-halo go on :root (css/world.css).
  *  - If anything fails, or the GPU drops the context, fail() takes the world
  *    down and the cream site returns, without a reload.
  *
@@ -162,7 +164,8 @@ export function createWorld(K, opts) {
       seg.e = e;
       pose.pos.lerpVectors(poseA.pos, poseB.pos, e);
       pose.tgt.lerpVectors(poseA.tgt, poseB.tgt, e);
-      if (!reduce) pose.pos.y += (seg.b.arc || 0) * arc;
+      // Arc up between places, the gaze lifting with it (over roofs and domes, not into them).
+      if (!reduce) { pose.pos.y += (seg.b.arc || 0) * arc; pose.tgt.y += (seg.b.arc || 0) * (seg.b.tilt == null ? 0.5 : seg.b.tilt) * arc; }
       pose.tod = poseA.tod; pose.tod2 = poseB.tod; pose.e = e;
       pose.mist = lerp(poseA.mist, poseB.mist, e) + (reduce ? 0 : (seg.b.mist || 0) * arc);
       f.travel = reduce ? 0 : arc;
@@ -172,8 +175,10 @@ export function createWorld(K, opts) {
 
   function frame(now) {
     raf = running ? requestAnimationFrame(frame) : 0;
-    var dt = Math.min((now - last) / 1000, 0.05);
-    last = now;
+    // (rAF's timestamp can be a little before the performance.now() taken
+    // when the loop started: never let the clock run backwards.)
+    var dt = clamp((now - last) / 1000, 0, 0.05);
+    last = Math.max(last, now);
     // Idle: after a few still seconds draw every other frame; with reduced
     // motion, only when something changed.
     var idle = now - lastInput > 4000 && !override;
@@ -247,10 +252,27 @@ export function createWorld(K, opts) {
     var fo = reduce && seg.b ? 1 - smooth(0.08, 0.22, Math.abs(seg.t - 0.5)) : 0;
     if (override && override.fade != null) fo = Math.max(fo, override.fade);
     setFade(fo);
-    if (Math.abs(sky.P.dark - lastDark) > 0.01) { lastDark = sky.P.dark; root.style.setProperty('--world-dark', lastDark.toFixed(2)); }
+    // The page's ink follows the hour: dark ink on light glass by day, cream
+    // ink on plum glass at night (stepped, so styles change rarely).
+    // Day ink or night ink, never in between (half-way is low in contrast);
+    // a little hysteresis so it doesn't flicker at the turn. css/world.css
+    // eases the change over 0.4 s.
+    var ink = lastDark === 1 ? (sky.P.dark > 0.5 ? 1 : 0) : (sky.P.dark > 0.55 ? 1 : 0);
+    if (ink !== lastDark) setInk(lastDark = ink);
     gl.render(scene, camera);
   }
 
+  function setInk(k) {
+    function m(a, b) { return Math.round(lerp(a, b, k)); }
+    var s = root.style;
+    s.setProperty('--world-ink', 'rgb(' + m(31, 255) + ',' + m(20, 243) + ',' + m(10, 222) + ')');
+    s.setProperty('--world-ink-soft', 'rgba(' + m(74, 255) + ',' + m(47, 236) + ',' + m(18, 212) + ',' + lerp(1, 0.92, k).toFixed(2) + ')');
+    s.setProperty('--world-card', 'rgba(' + m(255, 36) + ',' + m(249, 16) + ',' + m(238, 34) + ',' + lerp(0.5, 0.44, k).toFixed(2) + ')');
+    s.setProperty('--world-gold', 'rgb(' + m(122, 246) + ',' + m(78, 207) + ',' + m(10, 122) + ')');
+    s.setProperty('--world-panel', 'rgba(' + m(255, 32) + ',' + m(250, 14) + ',' + m(241, 30) + ',' + lerp(0.93, 0.88, k).toFixed(2) + ')');
+    s.setProperty('--world-card-strong', 'rgba(' + m(253, 34) + ',' + m(246, 15) + ',' + m(232, 32) + ',' + lerp(0.86, 0.88, k).toFixed(2) + ')');
+    s.setProperty('--world-halo', 'rgba(' + m(255, 22) + ',' + m(248, 8) + ',' + m(234, 20) + ',' + lerp(0.9, 0.8, k).toFixed(2) + ')');
+  }
   function mark(list) { for (var i = 0; i < list.length; i++) visibleNow[list[i]] = true; }
 
   var fadeNow = -1;
@@ -326,7 +348,7 @@ export function createWorld(K, opts) {
       if (p && p.unmount) { var k2 = p.unmount(); if (k2) keep = k2; }
     });
     body.classList.remove('world-on', 'world-gate', 'world-open');
-    root.style.removeProperty('--world-dark');
+    ['--world-ink', '--world-ink-soft', '--world-card', '--world-card-strong', '--world-halo', '--world-gold', '--world-panel'].forEach(function (p) { root.style.removeProperty(p); });
     failHooks.forEach(function (h) { try { h(err); } catch (x) {} });
     if (keep) keep.scrollIntoView({ block: 'start', behavior: 'instant' });
     else if (anchor) window.scrollBy({ top: anchor.getBoundingClientRect().top - offset, left: 0, behavior: 'instant' });

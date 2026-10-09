@@ -21,11 +21,6 @@ var C = cols(['px', 'py', 'pz', 'tx', 'ty', 'tz', 'tod', 'mist']);
 // Camera keys over the stop (0..1), local coordinates.
 var KEYS = {
   //            at   px    py    pz      tx   ty    tz     tod    mist
-  dawn: [
-    [0,           0,   1.75, -8.0,    0,   2.15, -30,   6.2,   0],
-    [0.5,        -2.2, 2.2,  -12.5,   0.6, 1.9,  -30,   6.75,  0],
-    [1,           0.6, 7.2,  -15.5,   0,   9.4,  -50,   7.3,   0]
-  ],
   morning: [
     [0,           0,   10.5, -5.5,    0,   1.0,  -27,   30.3,  0.15],
     [0.18,        0,   3.4,  -9.5,    0,   2.2,  -32,   31.2,  0],
@@ -211,7 +206,7 @@ export function build(W, opts) {
   // ── The pavilion at the far end, before the arch to the estate ─────────
   var PZ = -37.2, PW = 3.1, PH0 = 1.0, PT = PH0 + 3.6;
   box(g, -4.4, 4.4, 0, PH0, PZ - 4.4, PZ + 4.4, PAL.stone);
-  box(g, -4.55, 4.55, PH0 - 0.12, PH0, PZ - 4.55, PZ + 4.55, PAL.trim);
+  box(g, -4.55, 4.55, PH0 - 0.14, PH0 - 0.025, PZ - 4.55, PZ + 4.55, PAL.trim);
   for (var st = 0; st < 3; st++) box(g, -2.2, 2.2, 0, PH0 - (st + 1) * 0.25, PZ + 4.4, PZ + 4.4 + 0.42 * (st + 1), PAL.trim);
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (c) {
     var x = c[0] * PW, z = PZ + c[1] * PW;
@@ -244,7 +239,7 @@ export function build(W, opts) {
     g.push(tinted(new THREE.ConeGeometry(0.05, 0.3, 5).translate(cx, y0 + 1.55, cz), '#d9a441'));
   });
   // Inside the pavilion: a warm glow, and a toran on its front arch.
-  halos.add(0, PH0 + 1.5, PZ, 0, 0.5, 0, 3.4, cWarm);
+  if (!dawn) halos.add(0, PH0 + 1.5, PZ, 0, 0.5, 0, 3.4, cWarm);
   swag([-PW + 0.3, PT - 0.25, PZ + PW + 0.2], [PW - 0.3, PT - 0.25, PZ + PW + 0.2], 0.35, small ? 14 : 22, function (x, y, z, t, kk) {
     G.ball(x, y, z, 0.065);
     if (kk % 3 === 0 && t > 0.04 && t < 0.96) G.strand(x, y - 0.12, z, 4, 0.11, 0.05, 4);
@@ -281,26 +276,32 @@ export function build(W, opts) {
     lamps.add(px2, PH0, PZ + 4.25, 0.4, r(), 0, 1);
   }
 
-  // ── The deepstambh: a brass lamp tower before the pavilion ─────────────
-  var DZ = -29.6, prof = [[0, 0], [0.55, 0], [0.55, 0.12], [0.42, 0.18], [0.36, 0.34], [0.2, 0.42], [0.12, 0.5]];
-  var TIERS = 6, ty0 = 0.75, tstep = 0.5;
-  for (var ti = 0; ti < TIERS; ti++) {
-    var yy = ty0 + ti * tstep, rad = lerp(0.52, 0.2, ti / (TIERS - 1));
-    prof.push([0.09, yy - 0.08], [rad, yy - 0.02], [rad + 0.03, yy + 0.02], [0.1, yy + 0.06]);
-    var nf = Math.max(5, Math.round(rad * 22));
-    for (var fk = 0; fk < nf; fk++) { var fa = fk / nf * Math.PI * 2 + ti; lamps.add(Math.cos(fa) * rad, yy + 0.03, DZ + Math.sin(fa) * rad, -1, r(), 0, 0.8); }
-  }
-  var topY = ty0 + TIERS * tstep;
-  prof.push([0.08, topY - 0.1], [0.16, topY], [0.12, topY + 0.18], [0.03, topY + 0.32], [0, topY + 0.34]);
+  // ── Deepstambhs: brass lamp towers before the pavilion ────────────────
+  // At dawn two flank the shrine (the camera stands between them); in the
+  // morning one stands on the axis.
   var brass = new THREE.MeshPhongMaterial({ color: '#c08a2a', specular: '#ffe0a0', shininess: 50, emissive: '#2a1404' });
-  var tower = new THREE.Mesh(new THREE.LatheGeometry(prof.map(function (p) { return new THREE.Vector2(p[0], p[1]); }), 18), brass);
-  tower.position.z = DZ;
-  group.add(tower);
-  lamps.add(0, topY + 0.34, DZ, -1, 0.5, 0, 1.6);
-  halos.add(0, topY * 0.6, DZ, 0, 0.5, 0, 3.8, col('#ff9a48'));
+  var towers = dawn ? [[-5.3, -31.6, 0.85], [5.3, -31.6, 0.85]] : [[0, -29.6, 1]];
+  towers.forEach(function (tw) {
+    var TX = tw[0], DZ = tw[1], ks = tw[2];
+    var prof = [[0, 0], [0.55, 0], [0.55, 0.12], [0.42, 0.18], [0.36, 0.34], [0.2, 0.42], [0.12, 0.5]];
+    var TIERS = 6, ty0 = 0.75, tstep = 0.5;
+    for (var ti = 0; ti < TIERS; ti++) {
+      var yy = ty0 + ti * tstep, rad = lerp(0.52, 0.2, ti / (TIERS - 1));
+      prof.push([0.09, yy - 0.08], [rad, yy - 0.02], [rad + 0.03, yy + 0.02], [0.1, yy + 0.06]);
+      var nf = Math.max(5, Math.round(rad * 22));
+      for (var fk = 0; fk < nf; fk++) { var fa = fk / nf * Math.PI * 2 + ti; lamps.add(TX + Math.cos(fa) * rad * ks, (yy + 0.03) * ks, DZ + Math.sin(fa) * rad * ks, -1, r(), 0, 0.8); }
+    }
+    var topY = ty0 + TIERS * tstep;
+    prof.push([0.08, topY - 0.1], [0.16, topY], [0.12, topY + 0.18], [0.03, topY + 0.32], [0, topY + 0.34]);
+    var tower = new THREE.Mesh(new THREE.LatheGeometry(prof.map(function (p) { return new THREE.Vector2(p[0], p[1]); }), 18), brass);
+    tower.position.set(TX, 0, DZ); tower.scale.setScalar(ks);
+    group.add(tower);
+    lamps.add(TX, (topY + 0.34) * ks, DZ, -1, 0.5, 0, 1.6);
+    halos.add(TX, topY * 0.6 * ks, DZ, 0, 0.5, 0, 3.8 * ks, col('#ff9a48'));
+  });
 
   // ── Garlands and fairy lights strung across the court ──────────────────
-  var cross = [-5.5, -22, -31.4];
+  var cross = dawn ? [-5.5, -14.5, -21.5] : [-5.5, -22, -31.4];
   cross.forEach(function (z, i) {
     var a = [-AX + 0.3, AH + 0.9, z], b = [AX - 0.3, AH + 0.9, z];
     G.garlandTo(a, b, 1.5 + (i % 2) * 0.3, small ? 46 : 70, 0.07);
@@ -428,7 +429,7 @@ export function build(W, opts) {
     [[PETAL_F, 0.12, 1.4, 7, true, 1.5]]);
 
   var poolTex = softSprite('rgba(255,170,90,1)', 'rgba(255,120,40,0)');
-  var pools = [pool(group, poolTex, 0, 0, DZ, 9), pool(group, poolTex, 0, PH0, PZ, 8), pool(group, poolTex, 0, 0, QZC, 13, 0.85)];
+  var pools = [pool(group, poolTex, 0, 0, -30, 9), pool(group, poolTex, 0, PH0, PZ, 8), pool(group, poolTex, 0, 0, QZC, 13, 0.85)];
   [-1, 1].forEach(function (s) { pools.push(pool(group, poolTex, s * (AX - 1.2), 0, (Z0 + Z1) / 2, 6, 7)); });
 
   // ── Per frame ──────────────────────────────────────────────────────────
@@ -445,7 +446,7 @@ export function build(W, opts) {
     for (var i = 0; i < pools.length; i++) pools[i].material.opacity = lit * (i === 2 ? 0.28 : 0.4);
     if (lit > 0.02) {
       var fl = f.reduce ? 1 : 0.85 + 0.15 * Math.sin(time * 9) * Math.sin(time * 5.3);
-      W.lamp(o.x, 3.2, o.z + DZ, '#ff9a48', 9 * lit * fl, 16, 1.6);
+      for (var ti2 = 0; ti2 < towers.length; ti2++) W.lamp(o.x + towers[ti2][0], 3.2 * towers[ti2][2], o.z + towers[ti2][1], '#ff9a48', (dawn ? 5 : 9) * lit * fl, 14, 1.6);
       W.lamp(o.x, PH0 + 2, o.z + PZ, '#ffa858', 5 * lit, 11, 1.6);
       W.lamp(o.x - AX + 0.8, 2.4, o.z - 12, '#ffa050', 3.2 * lit, 9, 1.8);
       W.lamp(o.x + AX - 0.8, 2.4, o.z - 12, '#ffa050', 3.2 * lit, 9, 1.8);

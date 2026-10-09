@@ -6,7 +6,9 @@
  * same name form one stop. A stop holds while its sections fill the screen
  * (from its first section's top reaching the top of the screen until its
  * last section's bottom reaches the bottom), unless its place gives its own
- * range (the story's sticky track). The gaps between stops are the travel
+ * range (the story's sticky track), or a span [a, b]: it then starts when
+ * its first section's top is a screens down from the top of the screen, and
+ * ends when its last section's bottom is b screens up from the bottom. The gaps between stops are the travel
  * segments, where the camera flies from one place to the next.
  *
  * Within a stop, keyframes follow the pattern Our Story set: a table of rows
@@ -50,6 +52,8 @@ export function createTimeline() {
 
   function measure(vh) {
     var sy = window.scrollY;
+    // A stop whose sections aren't on the page plays no part.
+    for (var d = stops.length - 1; d >= 0; d--) if (!stops[d].range && !stops[d].els.length) stops.splice(d, 1);
     stops.forEach(function (s) {
       if (s.range) { var rg = s.range(vh); s.y0 = rg[0]; s.y1 = rg[1]; return; }
       var top = Infinity, bottom = -Infinity;
@@ -57,7 +61,9 @@ export function createTimeline() {
         var r = el.getBoundingClientRect();
         top = Math.min(top, r.top + sy); bottom = Math.max(bottom, r.bottom + sy);
       });
-      s.y0 = top; s.y1 = Math.max(top, bottom - vh);
+      var sp = typeof s.span === 'function' ? s.span() : s.span;
+      var a = sp ? sp[0] : 0, b = sp ? sp[1] : 0;
+      s.y0 = top - a * vh; s.y1 = Math.max(s.y0, bottom - vh + b * vh);
     });
     maxY = Math.max(0, document.documentElement.scrollHeight - vh);
     for (var i = 0; i < stops.length; i++) {

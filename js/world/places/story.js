@@ -29,7 +29,7 @@
  *
  * Keyframes are pinned to the panels by keys(); columns are named in C.
  */
-import { THREE, clamp, lerp, smooth, rng, col, mq, box, cyl, swag, groundShade, Garlands, PointSet, pointKit,
+import { THREE, clamp, lerp, smooth, rng, col, box, cyl, swag, groundShade, Garlands, PointSet, pointKit,
          GLOW_F, HALO_F, FLAME_F, PETAL_F, LANTERN_F, haveli, HAVELI_PAL, broadleaf, ashoka, diyaGeometry,
          rangoliTexture, pool } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
@@ -58,7 +58,7 @@ function keys() {
   // the scene sits under the words rather than behind them.
   //  unit             px  py    pz     tx  ty    tz    fit  night walk talk gath carry petal phera fest lant  fw  drift lift liftP
   return [
-    [-1,               0, 17,   46,    0, 3.0, -12,   0.4, 0,    0,   0,   0,   0,    0,   0,    0,   0,    0,  1,   1.2, 0],
+    [-1,               0, 17,   46,    0, 3.0, -12,   0,   0,    0,   0,   0,   0,    0,   0,    0,   0,    0,  1,   1.2, 0],
     [0,                0, 9.0,  22,    0, 2.4, -12,   1,   0,    0,   0,   0,   0,    0,   0,    0,   0,    0,  1,   1.8, 0],
     [S(0),             0, 6.6,  15.5,  0, 2.1, -12,   1,   0.02, 0,   0,   0,   0,    0,   0,    0,   0,    0,  1,   2.2, -0.4],
     [S(0) + F,         0, 6.2,  14,    0, 2.0, -12,   1,   0.05, 0.02, 0,  0,   0,    0,   0,    0,   0,    0,  0.9, 2.2, -0.4],
@@ -306,7 +306,9 @@ function createScene(W) {
   var xStep = small ? 0.82 : 0.6, zStep = small ? 0.42 : 0.3;
   for (var fx2 = -11; fx2 <= 11.01; fx2 += xStep) {
     if (Math.abs(fx2) < 1.5) continue;
-    for (var fz = 24; fz > -21.5; fz -= zStep) {
+    // Phones pull the camera back to fit both houses, so their field runs
+    // further towards it (no bare ground under the words).
+    for (var fz = small ? 36 : 24; fz > -21.5; fz -= zStep) {
       var bx = fx2 + (r() - 0.5) * 0.18, bz = fz + (r() - 0.5) * 0.14;
       if (Math.hypot(bx - HOME_A.x, bz - HOME_A.z) < 8.2 || Math.hypot(bx - HOME_B.x, bz - HOME_B.z) < 8.2) continue;
       if (Math.abs(bx) > 11 - (bz < -15 ? (bz + 15) * -0.4 : 0)) continue;
@@ -708,14 +710,9 @@ function buildDom(chapters) {
     '<p class="si-date">10 &middot; March &middot; 2027</p>');
   text.appendChild(outro);
 
-  var skip = el('button', 'si-skip', 'Skip story <span aria-hidden="true">&darr;</span>');
-  skip.type = 'button';
-  skip.setAttribute('aria-label', 'Skip the story and go to the celebrations');
-  if (mq('(pointer: fine)')) skip.style.cursor = 'none';   // the site draws its own cursor
-
-  [vignette, text, skip].forEach(function (n) { stage.appendChild(n); });
+  [vignette, text].forEach(function (n) { stage.appendChild(n); });
   track.appendChild(stage);
-  return { track: track, stage: stage, vignette: vignette, intro: intro, panels: panels, outro: outro, skip: skip };
+  return { track: track, stage: stage, vignette: vignette, intro: intro, panels: panels, outro: outro };
 }
 
 // Write a style only when it changes, to keep layout work down.
@@ -735,7 +732,7 @@ export function mount(W) {
   if (!section) return null;
   var chapters = readChapters(section);
   if (chapters.length !== 4 || chapters.some(function (c) { return !c.title; })) return null;
-  var root = document.documentElement, reduce = W.reduce;
+  var root = document.documentElement;
   var dom = buildDom(chapters);
 
   // Mount after the header and portrait, keeping the reader's place if the
@@ -773,21 +770,14 @@ export function mount(W) {
   function updateText(ys) {
     // The same eased scroll the camera follows, so words and scene move together.
     var uu = clamp((ys - trackTop) / sh, -1.5, TOTAL + 1);
-    set(dom.vignette, 'opacity', (smooth(-0.45, 0.05, uu) * (1 - smooth(TOTAL - 0.1, TOTAL + 0.6, uu))).toFixed(3));
+    set(dom.vignette, 'opacity', (smooth(-0.1, 0.14, uu) * (1 - smooth(TOTAL - 0.1, TOTAL + 0.6, uu))).toFixed(3));
     beat(dom.intro, 0.06, 0.24, S(0) - 0.16, S(0) + 0.02, uu);
     for (var i = 0; i < dom.panels.length; i++) beat(dom.panels[i], S(i), S(i) + FADE, E(i) - FADE, E(i), uu);
     var oIn = smooth(E(3) + 0.02, E(3) + 0.28, uu);
     set(dom.outro, 'opacity', oIn.toFixed(3));
     set(dom.outro, 'visibility', oIn > 0.002 ? 'visible' : 'hidden');
     set(dom.outro, '--y', ((1 - oIn) * 26).toFixed(1) + 'px');
-    dom.skip.classList.toggle('show', uu > -0.35 && uu < TOTAL - 0.5);
   }
-
-  dom.skip.addEventListener('click', function () {
-    var next = document.querySelector('.ev-sec') || dom.track.parentNode.nextElementSibling;
-    var top = next ? next.getBoundingClientRect().top + window.scrollY - 12 : dom.track.getBoundingClientRect().bottom + window.scrollY;
-    window.scrollTo({ top: top, behavior: reduce ? 'instant' : 'smooth' });
-  });
 
   var built = false;
   // The scene itself is heavy: build it when the browser is idle (or at

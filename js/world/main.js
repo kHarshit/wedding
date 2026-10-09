@@ -1,9 +1,12 @@
 /*
  * The world's entry point: the one module script index.html loads.
  *
- * Without WebGL, with prefers-reduced-data, or if the guest has already
- * tapped through the video gate, it does nothing and the page stays the
- * cream site. Otherwise it registers a gate with js/intro.js straight away
+ * A tiny script in index.html's head has already looked for WebGL and
+ * prefers-reduced-data, and set html.world-likely, which shows a still of
+ * the 3D gate (assets/images/gate-tall.webp / gate-wide.webp, rendered from
+ * the scene) while three.js loads. Without that class, or if the guest has
+ * already tapped through the video gate, this does nothing and the page
+ * stays the cream site. Otherwise it registers a gate with js/intro.js straight away
  * (so the tap waits for the 3D doors instead of playing intro.mp4), loads
  * three.js and the first places, and once the doors are drawn sets
  * body.world-on: the door poster fades to the live doors.
@@ -16,19 +19,35 @@
  * door video is held back while the world loads, so the two never compete
  * for a slow connection; any fallback restores it.
  *
- * After the doors: Our Story mounts its track and builds when idle; the
- * morning courtyard is built as the camera nears it.
+ * The stops, in page order: the shrine (#invite, in the dawn court's
+ * pavilion), the two homes (#invitation), the terrace (.count-sec), Our
+ * Story, and the morning court (the rest, until Phases 3-4). After the
+ * doors, the homes', terrace's and story's code arrives and each builds
+ * when the browser is idle; the morning court as the camera nears it.
  */
 function mq(q) { return !!(window.matchMedia && window.matchMedia(q).matches); }
-function hasWebGL() {
-  try {
-    var c = document.createElement('canvas');
-    var gl = c.getContext('webgl2') || c.getContext('webgl');
-    if (!gl) return false;
-    var lose = gl.getExtension('WEBGL_lose_context');
-    if (lose) lose.loseContext();
-    return true;
-  } catch (e) { return false; }
+// The invitation's two families, each in a half of its own, so each can
+// rest before its own home (css/world.css lays them out); put back on fallback.
+function splitInvitation(on) {
+  var card = document.querySelector('#invitation .card');
+  if (!card) return;
+  if (on) {
+    if (card.querySelector('.card-half')) return;
+    var labels = card.querySelectorAll(':scope > .person-label');
+    Array.prototype.forEach.call(labels, function (label, i) {
+      var half = document.createElement('div');
+      half.className = 'card-half ' + (i ? 'bride' : 'groom');
+      card.insertBefore(half, label);
+      for (var n = label; n && !n.classList.contains('card-divider') && !n.classList.contains('card-close');) {
+        var next = n.nextElementSibling; half.appendChild(n); n = next;
+      }
+    });
+  } else {
+    Array.prototype.forEach.call(card.querySelectorAll(':scope > .card-half'), function (half) {
+      while (half.firstChild) card.insertBefore(half.firstChild, half);
+      half.remove();
+    });
+  }
 }
 function idle(timeout) {
   return new Promise(function (res) {
@@ -38,12 +57,16 @@ function idle(timeout) {
 }
 
 var intro = window.weddingIntro;
-var body = document.body;
+var body = document.body, root = document.documentElement;
+var themeMeta = document.querySelector('meta[name="theme-color"]'), themeCream = themeMeta && themeMeta.getAttribute('content');
 var video = document.querySelector('#intro video');
 var VIDEO_SRC = video ? video.getAttribute('src') : null;
 
-if (intro && intro.state() === 'waiting' && !mq('(prefers-reduced-data: reduce)') &&
-    'ResizeObserver' in window && 'IntersectionObserver' in window && hasWebGL()) start();
+// index.html's head script has already checked for WebGL and reduced data
+// (html.world-likely, which also shows the gate's still while we load).
+if (intro && intro.state() === 'waiting' && root.classList.contains('world-likely') &&
+    'ResizeObserver' in window && 'IntersectionObserver' in window) start();
+else root.classList.remove('world-likely');
 
 function start() {
   var reduceMotion = mq('(prefers-reduced-motion: reduce)');
@@ -85,6 +108,9 @@ function start() {
     gaveUp = true;
     if (err && !quiet) console.warn('[world] not starting:', err && err.message || err);
     intro.useGate(null);
+    root.classList.remove('world-likely');
+    splitInvitation(false);
+    if (themeMeta) themeMeta.setAttribute('content', themeCream);
     restoreVideo();
     var introEl = document.getElementById('intro');
     if (introEl) introEl.classList.remove('world-wait');
@@ -95,38 +121,61 @@ function start() {
 
   Promise.all([
     import('../immersive/kit.js'), import('./engine.js'), import('./land.js'),
-    import('./places/gate.js'), import('./places/court.js')
+    import('./places/gate.js'), import('./places/court.js'), import('./places/shrine.js')
   ]).then(function (m) {
     if (gaveUp) return null;
-    var K = m[0], E = m[1], L = m[2], Gate = m[3], Court = m[4];
+    var K = m[0], E = m[1], L = m[2], Gate = m[3], Court = m[4], Shrine = m[5];
     W = E.createWorld(K, { reduceMotion: reduceMotion });
     W.onFail(function (err) { giveUp(err, true); });
-    var court = W.timeline.add({ name: 'court', places: ['gate', 'dawn'], pose: Court.courtPose('dawn', L.COURT_DAWN) });
+    // The stops, in page order (the story adds its own once it mounts).
+    var shrine = W.timeline.add({ name: 'shrine', places: ['gate', 'dawn', 'shrine'], pose: Shrine.shrinePose(L.COURT_DAWN) });
+    var homes = W.timeline.add({ name: 'homes', places: ['homes', 'terrace'], arc: 9, tilt: -0.15, mist: 0.1, span: function () { return homesSpan(); },
+                                 pose: function (u, out, f) { homesPose(u, out, f); } });
+    var terrace = W.timeline.add({ name: 'terrace', places: ['terrace', 'story'], arc: 8, tilt: 0.15, span: [0.25, 0.5],
+                                   pose: function (u, out, f) { terracePose(u, out, f); } });
     var morning = W.timeline.add({ name: 'morning', places: ['morning'], arc: 9, mist: 0.2, pose: Court.courtPose('morning', L.COURT_MORNING) });
-    W.define('gate', function () { var p = Gate.build(W, { origin: L.COURT_DAWN }); p.stop = court; return p; });
-    W.define('dawn', function () { var p = Court.build(W, { variant: 'dawn', origin: L.COURT_DAWN }); p.stop = court; return p; });
+    W.define('gate', function () { var p = Gate.build(W, { origin: L.COURT_DAWN }); p.stop = shrine; return p; });
+    W.define('dawn', function () { var p = Court.build(W, { variant: 'dawn', origin: L.COURT_DAWN }); p.stop = shrine; return p; });
+    W.define('shrine', function () { var p = Shrine.build(W, { origin: L.COURT_DAWN }); p.stop = shrine; return p; });
+    // Later places load their own code, and build when the browser is idle.
+    W.define('homes', function () { return homesMod.then(function (H) { return idle(1500).then(function () { var p = H.build(W); p.stop = homes; return p; }); }); });
+    W.define('terrace', function () { return terraceMod.then(function (T) { return idle(1500).then(function () { var p = T.build(W); p.stop = terrace; return p; }); }); });
     W.define('morning', function () {
       return idle(1500).then(function () { var p = Court.build(W, { variant: 'morning', origin: L.COURT_MORNING }); p.stop = morning; return p; });
     });
-    return Promise.all([W.ensure('gate'), W.ensure('dawn')]);
+    return Promise.all([W.ensure('gate'), W.ensure('dawn'), W.ensure('shrine')]);
   }).then(function (built) {
     if (!built || gaveUp) return;
-    if (!built[0] || !built[1]) throw new Error('the gate could not be built');
+    if (!built[0] || !built[1] || !built[2]) throw new Error('the gate could not be built');
     if (intro.state() === 'begun') { giveUp(null); return; }   // the guest is already in
     gate = built[0];
     gate.hold();
     W.start();
     W.render();
     if (W.dead()) return;
+    splitInvitation(true);
     body.classList.add('world-on', 'world-gate');
-    // Fetch Our Story while the guest reads the names.
+    if (themeMeta) themeMeta.setAttribute('content', '#1a1020');
+    // Fetch the next places' code while the guest reads the names.
     storyModule = import('./places/story.js');
     storyModule.catch(function () {});
+    fetchLater();
     if (pending) { var p = pending; pending = null; document.getElementById('intro').classList.remove('world-wait'); openDoors(p.done); }
   }).catch(function (err) { giveUp(err); });
 
-  var storyModule = null;
+  var storyModule = null, homesMod = null, terraceMod = null;
+  var homesPose = function (u, out, f) { out.pos.set(0, 3, 80); out.tgt.set(0, 3, 56); out.tod = 8.5; out.mist = 0; };
+  var homesSpan = function () { return [0.3, 0.15]; };
+  var terracePose = function (u, out) { out.pos.set(0, 8.8, 53); out.tgt.set(0, 6.5, 18); out.tod = 17; out.mist = 0; };
+  function fetchLater() {
+    homesMod = import('./places/homes.js');
+    homesMod.then(function (H) { homesPose = H.homesPose; homesSpan = H.homesSpan; if (W) W.poke(); }).catch(function () {});
+    terraceMod = import('./places/terrace.js');
+    terraceMod.then(function (T) { terracePose = T.terracePose; if (W) W.poke(); }).catch(function () {});
+  }
   function afterDoors() {
+    var sh = W && W.place('shrine');
+    if (sh) sh.arrive();
     // Mount the story once the page has faded in; its scene builds when idle.
     setTimeout(function () {
       if (!W || W.dead()) return;

@@ -15,7 +15,7 @@
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, notchShape, bandShape, shapeFrom, swag,
          groundShade, mergeUV, Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, diyaGeometry, rangoliTexture,
-         rangoli, pool, worldUV, stoneTexture, diyaBowls } from '../lib.js';
+         rangoli, pool, worldUV, stoneTexture, diyaBowls, jaaliTexture } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { COURT } from '../land.js';
 
@@ -41,25 +41,6 @@ function grainTexture() {
   var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
   return t;
 }
-// A stone jaali: eight-pointed stars and crosses cut through sandstone.
-function jaaliTexture() {
-  var c = document.createElement('canvas'); c.width = c.height = 256;
-  var x = c.getContext('2d');
-  x.fillStyle = '#e8c49a'; x.fillRect(0, 0, 256, 256);
-  x.globalCompositeOperation = 'destination-out';
-  var n = 6, s = 256 / n;
-  for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) {
-    var cx = (i + 0.5) * s, cy = (j + 0.5) * s;
-    x.beginPath();
-    for (var k = 0; k < 16; k++) { var a = k / 16 * Math.PI * 2, rr = k % 2 ? s * 0.2 : s * 0.38; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
-    x.closePath(); x.fill();
-    // Small diamonds between the stars.
-    x.beginPath(); x.moveTo(i * s, j * s - s * 0.09); x.lineTo(i * s + s * 0.09, j * s); x.lineTo(i * s, j * s + s * 0.09); x.lineTo(i * s - s * 0.09, j * s); x.closePath(); x.fill();
-  }
-  var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  return t;
-}
-
 // One door leaf, hinge at x = 0, running to +x; front towards +z.
 function leafGeometry(r) {
   var g = [], studs = [], bosses = [];
@@ -421,12 +402,12 @@ export function build(W, opts) {
   var doorPool = pool(group, poolTex, 0, 0.11, DOOR_Z + 0.9, 2.8, 1.3);
 
   // ── State and the opening ──────────────────────────────────────────────
-  var openT = -1, doorsOpen = 0, push = 0, done = null, begun = false, todNow = 5.35;
+  var opened = false, doorsOpen = 0, push = 0, done = null, begun = false, todNow = 5.35;
   var startPose = { pos: new THREE.Vector3(), tgt: new THREE.Vector3() };
   var endPose = { pos: new THREE.Vector3(), tgt: new THREE.Vector3(), tod: 6.2 };
   var tmpV = new THREE.Vector3();
   var aspect = 1;
-  var OPEN_S = 2.6, PUSH0 = 0.55, PUSH1 = 5.0, BEGIN = 4.35;
+  var OPEN_S = 2.6, PUSH0 = 0.55, PUSH1 = 6.4, BEGIN = 5.5;
 
   // The camera before the tap: square on, a little below the toran.
   function closedPose(out) {
@@ -441,9 +422,14 @@ export function build(W, opts) {
   }
 
   function override(pose, f) {
-    var t = openT < 0 ? 0 : (f.reduce ? (performance.now() - reduceStart) / 1000 : f.time - openT);
+    // Wall-clock time since the tap: a slow phone gets fewer frames, not a
+    // slower opening (the world clock is capped per frame).
+    var t = opened ? (performance.now() - reduceStart) / 1000 : 0;
+    // If the page was let in some other way (intro.js's safety net), hand
+    // over at once so the guest's scrolling moves the camera.
+    if (opened && !begun && window.weddingIntro && window.weddingIntro.state() === 'begun') { begun = true; if (done) done(); finish(); return; }
     closedPose(startPose);
-    if (openT < 0) {
+    if (!opened) {
       pose.pos.copy(startPose.pos); pose.tgt.copy(startPose.tgt); pose.tod = 5.35; pose.mist = 0;
       override.fade = null;
       return;
@@ -483,7 +469,7 @@ export function build(W, opts) {
     if (t > BEGIN && !begun) { begun = true; if (done) done(); }
     if (t > PUSH1) finish();
   }
-  override.places = ['gate', 'dawn'];
+  override.places = ['gate', 'dawn', 'shrine'];
   override.fade = null;
   var reduceStart = 0;
   function finish() {
@@ -521,9 +507,9 @@ export function build(W, opts) {
     // Drive the camera from now until the doors are through.
     hold: function () { W.setOverride(override); },
     open: function (cb) {
-      if (openT >= 0) return;
+      if (opened) return;
       done = cb;
-      openT = W.f.time; reduceStart = performance.now();
+      opened = true; reduceStart = performance.now();
       W.poke();
     },
     finish: function () { if (!begun) { begun = true; if (done) done(); } finish(); }

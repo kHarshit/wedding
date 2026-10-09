@@ -1,11 +1,14 @@
 /* The page over the world (js/world). Nothing here applies until the world
-   has started and set body.world-on; without it (no WebGL, reduced data, or
-   a fallback) the cream design is untouched.
+   has started and set body.world-on (or, for the gate's still, until the
+   head script has seen WebGL and set html.world-likely); without them the
+   cream design is untouched.
 
-   The world's canvas is fixed behind <main>. Section backgrounds go clear and
-   the content sits on "lamplit glass": warm translucent cream with a gold
-   hairline and a soft inner glow, so the ink stays legible as the hours pass
-   behind it. The corner florals and the DOM butterflies step aside. */
+   The world's canvas is fixed behind <main>. Section backgrounds go clear;
+   content sits on light "lamplit glass", or straight on the scene with a
+   soft halo where it stays legible. The ink follows the hour: the engine
+   sets --world-ink, --world-ink-soft, --world-card and --world-halo from
+   the sky (dark ink on pale glass by day, cream ink on plum glass at night).
+   The corner florals, DOM butterflies and lotus dividers step aside. */
 
 .world-canvas,.world-fade{display:none}
 .world-on .world-canvas{display:block;position:fixed;left:0;top:0;z-index:0;width:100%;height:100vh;height:100lvh;pointer-events:none}
@@ -14,31 +17,51 @@ html:has(body.world-on){background:#1a1020}
 body.world-on{background:#1a1020}
 .world-on main{position:relative;z-index:1}
 
-/* ── The gate: the live doors replace the video once they are drawn ── */
+/* ── The gate ──
+   While three.js loads, a still of the 3D doors stands in for them (the
+   video keeps doors.webp for its own fallback); it fades as the live doors
+   take over, so the hand-over is seamless. */
+.world-likely #intro::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:#0b0c22 url(../assets/images/gate-tall.webp) center/cover no-repeat;transition:opacity 1.2s ease}
+@media (min-aspect-ratio:1/1){.world-likely #intro::before{background-image:url(../assets/images/gate-wide.webp)}}
+.world-likely #intro video{visibility:hidden}
 .world-gate #intro{background:transparent}
-.world-gate #intro video{opacity:0;transition:opacity 1.2s ease;pointer-events:none}
+.world-gate #intro::before{opacity:0}
 /* Tapped before the doors were ready: a quiet sign that they are coming. */
 #intro.world-wait::after{content:"";position:absolute;left:50%;bottom:calc(14% + 6px);width:26px;height:26px;margin-left:-13px;border-radius:50%;
   border:1px solid rgba(255,226,160,.25);border-top-color:rgba(255,226,160,.9);animation:worldWait 1s linear infinite}
 @keyframes worldWait{to{transform:rotate(360deg)}}
 
 /* ── Decor that belongs to the cream page ── */
-.world-on .corner-floral,.world-on #flutter{display:none!important}
+.world-on .corner-floral,.world-on #flutter,.world-on .lotus-divider{display:none!important}
 .world-on .glow{display:none}
 .world-on footer{background:transparent}
 
-/* ── Lamplit glass ── */
+/* ── Ink and glass ──
+   The hour's colours are registered so the day/night switch eases. */
+@property --world-ink{syntax:'<color>';inherits:true;initial-value:#1f140a}
+@property --world-ink-soft{syntax:'<color>';inherits:true;initial-value:#4a2f12}
+@property --world-gold{syntax:'<color>';inherits:true;initial-value:#7a4e0a}
+@property --world-card{syntax:'<color>';inherits:true;initial-value:rgba(255,249,238,.5)}
+@property --world-card-strong{syntax:'<color>';inherits:true;initial-value:rgba(253,246,232,.8)}
+@property --world-panel{syntax:'<color>';inherits:true;initial-value:rgba(255,250,241,.93)}
+@property --world-halo{syntax:'<color>';inherits:true;initial-value:rgba(255,248,234,.9)}
+html:has(body.world-on){transition:--world-ink .4s ease,--world-ink-soft .4s ease,--world-gold .4s ease,--world-card .4s ease,--world-card-strong .4s ease,--world-panel .4s ease,--world-halo .4s ease}
 .world-on{
-  --glass:linear-gradient(180deg,rgba(255,250,240,.82),rgba(250,238,214,.74));
-  --glass-edge:rgba(200,146,52,.5);
-  --glass-shadow:inset 0 0 0 1px rgba(255,244,222,.45),inset 0 0 42px rgba(255,186,96,.22),0 22px 60px rgba(26,10,22,.30),0 2px 10px rgba(26,10,22,.16);
-  --glass-blur:blur(14px) saturate(1.12);
+  --glass:var(--world-card,rgba(255,249,238,.5));
+  --glass-edge:rgba(214,166,80,.5);
+  --glass-shadow:inset 0 0 0 1px rgba(255,244,222,.22),inset 0 0 36px rgba(255,186,96,.16),0 18px 48px rgba(26,10,22,.22);
+  --glass-blur:blur(16px) saturate(1.3);
+  --halo:0 0 2px var(--world-halo,rgba(255,248,234,.9)),0 0 14px var(--world-halo,rgba(255,248,234,.9)),0 0 30px var(--world-halo,rgba(255,248,234,.6));
 }
-@media (max-width:640px){.world-on{--glass:linear-gradient(180deg,rgba(255,250,240,.86),rgba(250,238,214,.8));--glass-blur:blur(8px)}}
+@media (max-width:640px){.world-on{--glass-blur:blur(12px) saturate(1.3)}}
+.world-on main{
+  --color-name-text:var(--world-ink,#1f140a);--color-gold-ink:var(--world-ink,#1a120a);--color-cream:var(--world-ink,#2a1a0a);
+  --color-muted:var(--world-ink-soft,#5c3e1a);--color-subtle:var(--world-ink-soft,#5c3e1a);
+}
 
 .world-on .gan-in,
 .world-on .card,
-.world-on .count-sec .container,
 .world-on .story-head,
 .world-on .ev-head,
 .world-on .event,
@@ -49,35 +72,94 @@ body.world-on{background:#1a1020}
 .world-on footer .container{
   background:var(--glass);
   border:1px solid var(--glass-edge);
-  border-radius:6px;
+  border-radius:8px;
   box-shadow:var(--glass-shadow);
   -webkit-backdrop-filter:var(--glass-blur);
   backdrop-filter:var(--glass-blur);
 }
+.world-on .h-title,.world-on .eyebrow,.world-on .person-name,.world-on .person-label,.world-on .person-city,.world-on .person-role{text-shadow:var(--halo)}
 
 /* Blocks that had no box of their own get some room inside the glass. */
-.world-on .gan-in{padding:clamp(1.8rem,5vw,2.8rem) clamp(1.4rem,6vw,3.2rem)}
 .world-on .gan-outer{background:none}
-.world-on .count-sec .container{max-width:760px;width:calc(100% - 2rem);padding-top:clamp(1.4rem,4svh,2.6rem);padding-bottom:clamp(1.4rem,4svh,2.6rem)}
-.world-on .story-head,.world-on .ev-head,.world-on .venue-head,.world-on .rsvp-head{max-width:640px;margin-left:auto;margin-right:auto;padding:clamp(1.6rem,5vw,2.4rem) clamp(1.2rem,5vw,2.4rem)}
+.world-on .story-head,.world-on .ev-head,.world-on .venue-head,.world-on .rsvp-head{max-width:620px;margin-left:auto;margin-right:auto;padding:clamp(1.3rem,4vw,2rem) clamp(1.1rem,4vw,2rem)}
 .world-on .story-head{margin-bottom:clamp(2.5rem,6vw,4rem)}
 .world-on .ev-head{margin-bottom:clamp(2rem,5vw,3rem)}
 .world-on .venue-foot{max-width:640px;margin:26px auto 0;padding:1.2rem 1.6rem}
 .world-on .rsvp-head{margin-bottom:clamp(1.6rem,4vw,2.4rem)}
-.world-on footer .container{max-width:560px;width:calc(100% - 2rem);padding-top:clamp(1.8rem,5vw,2.6rem);padding-bottom:clamp(1.6rem,4vw,2.2rem)}
+.world-on footer .container{max-width:560px;width:calc(100% - 2rem);padding-top:clamp(1.6rem,5vw,2.4rem);padding-bottom:clamp(1.4rem,4vw,2rem)}
 .world-on .ev-wrap{gap:clamp(24px,5vw,40px)}
-/* The form wants calm behind it. */
-.world-on .rsvp-card{--glass:linear-gradient(180deg,rgba(255,250,240,.93),rgba(250,238,214,.9))}
 .world-on .ev-spine{display:none}
+/* Headings that lead into a place, and the sections still to be given
+   their own places (Phases 3-4), keep a calmer, stronger glass. */
+.world-on .story-head,.world-on .ev-head,.world-on .event,.world-on .venue-head,.world-on .venue-foot,.world-on .rsvp-head,.world-on footer .container{
+  --glass:var(--world-card-strong,rgba(253,246,232,.8))}
+.world-on .rsvp-card{--glass:linear-gradient(180deg,rgba(255,250,240,.9),rgba(250,238,214,.86))}
 
-/* The tiles were glass already; give them the same edge. */
-.world-on .tile:before{background:rgba(255,248,236,.55);border-color:var(--glass-edge)}
+/* ── The shrine: the shloka on a small glass card beside the shrine ──
+   The page's Ganesha image is the murti in the scene now; it stays in the
+   page for screen readers. */
+.world-on .gan-img,.world-on .gan-top{position:absolute!important;width:1px!important;height:1px!important;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)}
+.world-on .gan-in{gap:14px;max-width:400px;padding:clamp(1.2rem,3vw,1.8rem) clamp(1.2rem,3vw,2rem)}
+.world-on .mantra{font-size:clamp(.98rem,1.9vw,1.1rem);line-height:1.9}
+@media (min-width:900px){
+  .world-on #invite{justify-content:flex-start}
+  .world-on .gan-outer{justify-content:flex-start;padding-left:max(6vw,40px)}
+}
+@media (max-width:899px){
+  .world-on #invite{align-items:flex-start}
+  .world-on .gan-outer{padding-top:calc(env(safe-area-inset-top) + 6svh)}
+  .world-on .gan-in{max-width:340px}
+}
 
-/* Ornaments between sections, and the scroll cue, float on the world in
-   the same dark glass as the story's Skip button. */
-.world-on .lotus-divider .ld-center{padding:7px 16px;border-radius:999px;border:1px solid rgba(240,196,106,.42);background:rgba(28,12,24,.4);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#f0c46a}
-.world-on .lotus-divider .ld-center svg.heart{color:#f4a3b6}
-.world-on .lotus-divider .ld-line{opacity:0}
+/* ── The homes: each family before its own home ──
+   js/world/main.js wraps the groom's and the bride's blocks in .card-half;
+   each half is its own glass. Wide screens set them left and right of the
+   lane, the "&" and the blessing between; on phones they come one after
+   the other with the scene between them, as the camera turns from one home
+   to the other. */
+.world-on .card{max-width:none;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;isolation:isolate}
+.world-on .card-corner{display:none}
+.world-on .card-half{position:relative;max-width:360px;margin:0 auto;padding:clamp(1.3rem,4vw,1.9rem) clamp(1.1rem,4vw,1.6rem);
+  background:var(--glass);border:1px solid var(--glass-edge);border-radius:8px;box-shadow:var(--glass-shadow);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.world-on .card-divider{max-width:360px;margin:clamp(1.1rem,3vw,1.6rem) auto}
+.world-on .card-divider .amp{filter:drop-shadow(0 0 8px var(--world-halo,rgba(255,248,234,.9))) drop-shadow(0 0 2px var(--world-halo,rgba(255,248,234,.9)))}
+.world-on .card-divider .ln{opacity:.8}
+.world-on .card-close{margin-top:clamp(1.1rem,3vw,1.6rem)}
+.world-on .card-close p{display:inline-block;padding:.35rem 1.1rem;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid var(--glass-edge)}
+.world-on .card-close .rule{display:none}
+.world-on .person-meta{line-height:1.75}
+@media (max-width:899px){
+  /* Room for the scene between the two families. */
+  .world-on .card-sec{padding-top:6svh;padding-bottom:6svh}
+  .world-on .card-divider{margin:24svh auto}
+  .world-on .card-close{margin-top:5svh}
+}
+@media (min-width:900px){
+  .world-on .card-sec .container{max-width:1240px}
+  .world-on .card{display:grid;grid-template-columns:minmax(0,330px) 1fr minmax(0,330px);column-gap:1.5rem;align-items:start;padding:1rem 0}
+  .world-on .card-half{grid-row:1/3;max-width:none;margin:0}
+  .world-on .card-half.groom{grid-column:1}
+  .world-on .card-half.bride{grid-column:3}
+  .world-on .card>.card-divider{grid-column:2;grid-row:1;align-self:center;margin:3.4rem 1rem 0;max-width:none}
+  .world-on .card>.card-close{grid-column:2;grid-row:2;align-self:end;margin:0}
+  .world-on .card-divider .amp{font-size:3rem}
+}
+
+/* ── The terrace: the countdown in lamplit glass over the sunset ── */
+.world-on .count-sec .container{background:none;border:0;box-shadow:none}
+.world-on .count-sec .eyebrow,.world-on .save-date{color:var(--world-ink,#1f140a);text-shadow:var(--halo)}
+.world-on .save-date{display:table;margin-left:auto;margin-right:auto;padding:.45rem 1.1rem .45rem 1.6rem;border-radius:999px;background:var(--glass);border:1px solid var(--glass-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.world-on .tile:before{background:linear-gradient(180deg,rgba(255,240,214,.5),rgba(255,214,160,.28));border:1px solid rgba(232,184,96,.75);
+  box-shadow:inset 0 0 18px rgba(255,196,110,.5),0 0 26px rgba(255,170,80,.32),0 8px 24px rgba(40,16,10,.22);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3)}
+.world-on .tile .n{text-shadow:0 0 14px rgba(255,236,200,.95),0 0 3px rgba(255,248,236,.9)}
+.world-on .tile-wrap .l{opacity:1;text-shadow:var(--halo)}
+.world-on .tick i{background:#f4a3b6;box-shadow:0 0 6px rgba(255,160,120,.8)}
+.world-on .scratch-heart{filter:drop-shadow(0 0 16px rgba(255,176,84,.6)) drop-shadow(0 10px 22px rgba(40,14,10,.3))}
+.world-on .scratch-glow{opacity:.5;background:radial-gradient(circle,rgba(255,190,100,.75),transparent 65%)}
+.world-on .cal-links .btn{background:rgba(255,246,232,.4);border-color:rgba(214,160,60,.75);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  box-shadow:inset 0 0 14px rgba(255,200,120,.35),0 6px 18px rgba(40,16,10,.18)}
+
+/* ── The scroll cue, in dark glass ── */
 .world-on .scroll-cue{padding:10px 16px 8px;border-radius:999px;border:1px solid rgba(240,196,106,.42);background:rgba(28,12,24,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .world-on .scroll-cue .sc-label{color:rgba(255,240,214,.92)}
 .world-on .scroll-cue .sc-arrow{height:30px}
@@ -86,3 +168,68 @@ body.world-on{background:#1a1020}
 /* The story's portrait sits on the world, framed in gold. */
 .world-on .portrait .frame{border-color:rgba(255,226,170,.6)}
 .world-on .portrait .box{box-shadow:0 22px 60px rgba(26,10,22,.35)}
+
+/* ── Legibility (coordinator review of Phase 2) ──
+   The details guests must read at a glance (names of parents, places,
+   times, the shloka, the calendar actions) sit on near-solid panels with
+   dark ink, measured at >= 4.5:1 against what is actually behind them
+   (scratchpad/world_shoot.py --contrast). The airy glass stays for frames. */
+/* These follow the hour too (js/world/engine.js): dark on pale by day, light on plum by night. */
+.world-on{--panel:var(--world-panel,rgba(255,250,241,.93));--panel-edge:rgba(176,124,40,.55);--ink-strong:var(--world-ink,#1f140a);
+  --ink-mid:var(--world-ink-soft,#4a2f12);--ink-gold:var(--world-gold,#7a4e0a)}
+
+/* The families: a solid inner panel, darker ink, larger small lines. */
+.world-on .card-half{background:var(--panel);border-color:var(--panel-edge);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.world-on .card-half .person-name{color:var(--ink-strong);text-shadow:none}
+.world-on .card-half .person-label{color:var(--ink-gold);opacity:1;text-shadow:none;font-size:clamp(.92rem,2.4vw,1rem)}
+.world-on .card-half .person-role{color:var(--ink-gold);opacity:1;text-shadow:none;font-size:clamp(1.05rem,2.8vw,1.15rem)}
+.world-on .card-half .person-meta{color:var(--ink-mid);font-size:clamp(1.02rem,2.8vw,1.1rem);font-weight:400;line-height:1.7}
+.world-on .card-half .person-meta .amp{color:var(--ink-gold)}
+.world-on .card-half .person-city{color:var(--ink-gold);opacity:1;text-shadow:none;font-size:clamp(.8rem,2.2vw,.86rem);font-weight:700;letter-spacing:.18em;margin-top:10px}
+.world-on .card-close p{background:var(--panel);border-color:var(--panel-edge);color:var(--ink-mid);font-size:clamp(1.05rem,2.6vw,1.2rem)}
+
+/* The shloka: larger, on a near-solid panel; it arrives with the page,
+   crisply (no slow reveal over the lamps). */
+.world-on main{transition:opacity .45s ease!important}
+.world-on #invite .reveal{opacity:1!important;transform:none!important;transition:none!important}
+.world-on .gan-in{background:var(--panel);border-color:var(--panel-edge);gap:16px}
+.world-on .mantra{color:var(--ink-strong);opacity:1;font-size:clamp(1.12rem,2.2vw,1.32rem);line-height:1.9}
+.world-on .gan-cap{color:var(--ink-gold);font-size:clamp(.95rem,2vw,1.05rem)}
+@media (min-width:900px){.world-on .gan-in{max-width:520px;padding:2rem 2.4rem}}
+@media (max-width:899px){.world-on .gan-in{max-width:360px}}
+
+/* The countdown: tiles' labels, Save the Date and the calendar actions. */
+@media (max-width:480px){.world-on .count-sec .eyebrow{font-size:.64rem;letter-spacing:.2em!important}}
+.world-on .count-sec .eyebrow{display:table;margin-left:auto;margin-right:auto;padding:.4rem 1rem .4rem 1.4rem;border-radius:999px;background:var(--panel);color:var(--ink-gold);text-shadow:none}
+.world-on .tile:before{background:rgba(255,248,236,.86)}
+.world-on .tile .n{color:var(--ink-strong);text-shadow:none}
+.world-on .tile-wrap .l{display:inline-block;margin-top:7px;padding:2px 6px 2px calc(6px + .38em);border-radius:4px;background:var(--panel);color:var(--ink-mid);font-weight:700;text-shadow:none}
+.world-on .save-date{background:var(--panel);border-color:var(--panel-edge);color:var(--ink-gold);font-weight:700;text-shadow:none}
+.world-on .cal-links .btn{background:#5a1a26;border-color:#e8b85a;box-shadow:0 6px 18px rgba(40,10,14,.35);-webkit-backdrop-filter:none;backdrop-filter:none}
+.world-on .cal-links .btn span{color:#fff6e6;opacity:1;font-weight:700}
+.world-on .cal-links .btn svg{stroke:#f2c66a}
+.world-on .cal-links .btn:before{background:linear-gradient(105deg,transparent 30%,rgba(255,220,150,.25) 50%,transparent 70%)}
+
+/* The homes' beat finishes before the countdown arrives: the terrace view
+   comes in over open space, and its words scroll in after it. */
+.world-on .count-sec{padding-top:62svh}
+
+/* Everywhere over the world: gold small caps in a deeper, bolder gold
+   (the cream site's #a8780f reads at ~3:1 on glass), and a deeper scrim
+   behind the story's words while the dusk sky is still bright. */
+.world-on main .eyebrow,.world-on main .field-label,.world-on main .ev-date,.world-on main .meta span,.world-on main .person-label{color:var(--ink-gold);opacity:1;font-weight:700;text-shadow:none}
+.world-on main .field-label em{color:var(--ink-mid)}
+.world-on main .meta strong,.world-on main .event .desc,.world-on main .venue-foot p,.world-on main .lead,.world-on main .chapter p{color:var(--ink-mid);opacity:1}
+.world-on .si-beat{--si-scrim:.66}
+.world-on .si-beat::before{inset:-3.6rem -4.2rem}
+@media (max-width:640px){.world-on .si-beat{--si-scrim:.86}.world-on .si-beat::before{inset:-4.6rem -3rem -5.4rem}}
+.world-on .si-date,.world-on .si-label{color:#f6cf7a}
+/* The "&" between the families, on a small panel of its own. */
+.world-on .card-divider{width:84px;height:84px;padding:0;gap:0;justify-content:center;border-radius:50%;background:var(--panel);border:1px solid var(--panel-edge);box-shadow:var(--glass-shadow)}
+.world-on .card-divider .ln{display:none}
+.world-on .card-divider .amp{font-size:2.6rem;filter:none;padding:0;line-height:1}
+@media (min-width:900px){.world-on .card>.card-divider{justify-self:center;margin:4.2rem 0 0}}
+/* The map's "Get Directions" veil (on hover/focus). */
+.world-on .map-card .veil{background:rgba(28,12,24,.62)}
+.world-on .map-card .veil span{color:#ffe6b0;font-weight:700}
+.world-on .si-cue{color:rgba(255,242,220,.98)}

@@ -25,8 +25,8 @@ var HOURS = [
   [7.4,  { top: '#5a7cbc', mid: '#aec0dc', hor: '#f6dcc0', glow: '#ffd098', hs: '#fff0de', hg: '#6e5a44', hi: 1.5, sc: '#ffd0a0', si: 1.7, mi: 0, so: 1, st: 0, br: 0, mo: 0, fd: 0.0075, rf: '#98a8c0', rm: '#7c90aa', rn: '#66788e' }],
   [9.5,  { top: '#5a8ccc', mid: '#a6cae6', hor: '#eef0e6', glow: '#fff0d0', hs: '#fff6e8', hg: '#74664c', hi: 1.65, sc: '#fff2dc', si: 2.0, mi: 0, so: 1, st: 0, br: 0, mo: 0, fd: 0.0065, rf: '#9cb0c4', rm: '#8296ac', rn: '#6c7e92' }],
   [12.5, { top: '#4a82c4', mid: '#98c2e4', hor: '#e6eef0', glow: '#fff6e0', hs: '#fffaf0', hg: '#786a50', hi: 1.7, sc: '#fffaf0', si: 2.1, mi: 0, so: 1, st: 0, br: 0, mo: 0, fd: 0.006, rf: '#98acc2', rm: '#8094aa', rn: '#6a7c90' }],
-  [16.4, { top: '#4a74b4', mid: '#b4bcd0', hor: '#f6dcb8', glow: '#ffc888', hs: '#fff0d8', hg: '#74583c', hi: 1.6, sc: '#ffd8a0', si: 1.9, mi: 0, so: 1, st: 0, br: 0, mo: 0, fd: 0.007, rf: '#b4a4b0', rm: '#98889c', rn: '#7a6a80' }],
-  [17.7, { top: '#3e3e7a', mid: '#b07a96', hor: '#ffc08a', glow: '#ff9a48', hs: '#ffd8b0', hg: '#60402a', hi: 1.6, sc: '#ffb070', si: 1.7, mi: 0, so: 0.9, st: 0, br: 0, mo: 0, fd: 0.008, rf: '#d0988a', rm: '#a87070', rn: '#7c5058' }]
+  [16.4, { top: '#4a72b0', mid: '#c4b8b4', hor: '#f8d8a8', glow: '#ffc070', hs: '#fff0d8', hg: '#74583c', hi: 1.6, sc: '#ffd49a', si: 1.9, mi: 0, so: 1, st: 0, br: 0, mo: 0, fd: 0.0065, rf: '#b8a4a4', rm: '#9c8890', rn: '#7a6a78' }],
+  [17.7, { top: '#4a4686', mid: '#d0907a', hor: '#ffc68c', glow: '#ffa040', hs: '#ffd8a8', hg: '#62422a', hi: 1.6, sc: '#ffae66', si: 1.75, mi: 0, so: 0.95, st: 0, br: 0, mo: 0, fd: 0.0075, rf: '#d49a84', rm: '#ac7468', rn: '#7e5254' }]
 ];
 // Dusk to night: the story's own ramp, sampled so its curves stay true.
 (function storyHours() {
