@@ -1,0 +1,95 @@
+/* Our Story, immersive: a scroll-driven three.js scene built by
+   js/immersive/story.js. Nothing here applies until the scene has started
+   (the section gets .si-on); until then, and whenever WebGL is missing, the
+   plain chapter list above stays the story. The track (.si) is several
+   screens tall; the stage inside it sticks to the viewport while the scroll
+   drives the camera and the chapter panels. Cream veils at both ends fade
+   the dusk in from the page and back out to it. */
+
+.story-sec.si-on{overflow:visible;padding-bottom:0}
+/* The chapter list stays in the page for screen readers; the scene is aria-hidden. */
+.story-sec.si-on .stop{position:absolute!important;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.story-sec.si-on .story-body{justify-content:center}
+/* The section's warm glow belongs to the header, not the whole tall track. */
+.story-sec.si-on>.glow{bottom:auto;height:1500px}
+@media(min-width:1024px){.story-sec.si-on .portrait{margin:0 auto}}
+
+.si{
+  --si-cream:#fdf6e8;
+  --si-ink:#fff3dc;
+  --si-gold:#f0c46a;
+  position:relative;
+  height:calc(var(--si-units,6) * 100vh);
+  height:calc(var(--si-units,6) * 100svh);
+  margin-top:clamp(2.5rem,6vw,4rem);
+}
+.si-stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--si-cream)}
+.si-canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+
+/* Darker edges and a little shade at the top, where the words sit. */
+.si-vignette{position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 90% 80% at 50% 58%,transparent 58%,rgba(22,8,18,.45) 100%),
+    linear-gradient(to bottom,rgba(22,8,24,.38),rgba(22,8,24,0) 42%)}
+
+/* Cream veils: JS slides them by --k (0 = off the stage, 1 = covering it). */
+.si-veil{position:absolute;left:0;right:0;height:200%;pointer-events:none;will-change:transform}
+.si-veil-top{top:0;background:linear-gradient(to bottom,var(--si-cream) 0,var(--si-cream) 50%,rgba(253,246,232,.72) 56%,rgba(253,246,232,.28) 64%,rgba(253,246,232,0) 72%);transform:translateY(calc((var(--k,1) - 1) * 72%))}
+.si-veil-bot{bottom:0;background:linear-gradient(to top,var(--si-cream) 0,var(--si-cream) 50%,rgba(253,246,232,.72) 56%,rgba(253,246,232,.28) 64%,rgba(253,246,232,0) 72%);transform:translateY(calc((1 - var(--k,0)) * 72%))}
+
+/* ── Words ── */
+.si-text{position:absolute;inset:0;pointer-events:none}
+.si-beat{position:absolute;left:50%;top:var(--si-top,12%);width:min(88vw,36rem);text-align:center;
+  opacity:0;visibility:hidden;transform:translate(-50%,var(--y,0px));will-change:opacity,transform}
+@media (max-width:640px){.si-beat{--si-top:9%}}
+/* A soft pool of shade behind the words keeps them legible over lamplight. */
+.si-beat::before{content:"";position:absolute;inset:-3.2rem -3.6rem;z-index:-1;
+  background:radial-gradient(closest-side,rgba(26,10,24,var(--si-scrim,.5)),rgba(26,10,24,0))}
+
+.si-label,.si-kicker,.si-date{display:block;margin:0;font-family:var(--font-cinzel);text-transform:uppercase;letter-spacing:.42em;padding-left:.42em;
+  font-size:clamp(.64rem,1.6vw,.78rem);color:var(--si-gold);text-shadow:0 0 14px rgba(240,160,60,.45)}
+.si-title{margin:.6rem 0 .75rem;font-family:var(--font-display);font-weight:300;font-size:clamp(2.5rem,7.4vw,4.2rem);line-height:1;letter-spacing:-.02em;
+  color:var(--si-ink);text-shadow:0 0 22px rgba(255,170,80,.35),0 2px 26px rgba(20,6,14,.75)}
+.si-rule{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 auto .85rem}
+.si-rule i{display:block;width:52px;height:1px;background:linear-gradient(to right,rgba(240,196,106,0),rgba(240,196,106,.85))}
+.si-rule i:last-child{background:linear-gradient(to left,rgba(240,196,106,0),rgba(240,196,106,.85))}
+.si-rule b{font-weight:400;font-size:.58rem;line-height:1;color:var(--si-gold)}
+.si-line{margin:0 auto;max-width:27ch;font-family:var(--font-display);font-style:italic;font-weight:400;
+  font-size:clamp(1.2rem,2.7vw,1.55rem);line-height:1.45;color:rgba(255,243,222,.94);text-shadow:0 2px 18px rgba(20,6,14,.85)}
+
+.si-intro .si-lead{margin:.7rem 0 0;font-family:var(--font-display);font-style:italic;font-weight:300;font-size:clamp(1.9rem,5.6vw,3rem);line-height:1.1;color:var(--si-ink);
+  text-shadow:0 0 22px rgba(255,170,80,.3),0 2px 26px rgba(20,6,14,.7)}
+.si-cue{display:flex;flex-direction:column;align-items:center;gap:12px;margin:2.2rem 0 0;font-family:var(--font-cinzel);font-size:.6rem;letter-spacing:.38em;padding-left:.38em;
+  text-transform:uppercase;color:rgba(255,236,200,.75)}
+.si-cue i{display:block;width:1px;height:46px;background:linear-gradient(to bottom,rgba(255,236,200,.9),rgba(255,236,200,0));transform-origin:top;animation:si-cue 2.4s ease-in-out infinite}
+@keyframes si-cue{0%{transform:scaleY(0);opacity:0}30%{opacity:1}60%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
+
+/* The names: once on the lit night, once in ink as the cream comes back. */
+.si-outro{--si-top:22%}
+@media (max-width:640px){.si-outro{--si-top:18%}}
+.si-outro::before{inset:-2.6rem -3rem}
+.si-names{margin:.7rem 0 .9rem;font-family:var(--font-display);font-weight:300;font-size:clamp(2.9rem,9.5vw,5.6rem);line-height:1;letter-spacing:-.02em;white-space:nowrap;
+  color:var(--si-ink);text-shadow:0 0 26px rgba(255,170,80,.4),0 2px 30px rgba(20,6,14,.7)}
+.si-names .amp{font-style:italic;font-size:.6em;vertical-align:.06em;padding:0 .12em;color:#f4a3b6;text-shadow:0 0 18px rgba(255,120,150,.5)}
+.si-ink{z-index:3}
+.si-ink::before{display:none}
+.si-ink .si-names{color:var(--color-name-text);text-shadow:0 0 4px var(--color-text-glow-strong),0 0 14px var(--color-text-glow-soft)}
+.si-ink .si-names .amp{background:var(--gradient-rose-joiner);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.si-ink .si-label,.si-ink .si-date{color:var(--color-gold-accent);text-shadow:none}
+.si-ink .si-rule i{background:linear-gradient(to right,transparent,var(--color-gold-line))}
+.si-ink .si-rule i:last-child{background:linear-gradient(to left,transparent,var(--color-gold-line))}
+.si-ink .si-rule b{color:var(--color-gold)}
+
+/* ── Skip ── */
+.si-skip{position:absolute;z-index:4;right:max(16px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));
+  display:inline-flex;align-items:center;gap:.55em;padding:9px 15px 9px 18px;border:1px solid rgba(240,196,106,.42);border-radius:999px;
+  background:rgba(28,12,24,.38);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  font-family:var(--font-cinzel);font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,240,214,.88);
+  opacity:0;visibility:hidden;transition:opacity .45s ease,visibility 0s linear .45s,border-color .3s ease}
+.si-skip.show{opacity:1;visibility:visible;transition:opacity .45s ease,visibility 0s,border-color .3s ease}
+.si-skip:hover{border-color:rgba(240,196,106,.8)}
+.si-skip:focus-visible{outline:1px solid var(--si-gold);outline-offset:3px}
+.si-skip span{font-family:var(--font-body);letter-spacing:0;font-size:.8rem}
+
+/* While the stage fills the screen, the page's corner florals and butterflies step aside. */
+html.si-immersed .corner-floral,html.si-immersed #flutter{opacity:0!important;transition:opacity .6s ease}
