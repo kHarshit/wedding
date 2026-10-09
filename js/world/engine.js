@@ -72,18 +72,22 @@ export function createWorld(K, opts) {
     }
   }
 
-  // Petals drifting past the camera while it travels between places.
+  // Petals drifting past the camera while it travels between places. A stop
+  // may ask for more (petals: up to 3) and a haze colour: the sky and the
+  // mist then warm through that colour at the middle of the travel, so one
+  // hour breaks into the next through a drift of petals and golden air
+  // rather than a muddy blend of the two.
   var TU = { uTime: { value: 0 }, uScale: { value: 600 }, uFogD: { value: 0.004 }, uAmt: { value: 0 }, uLit: { value: 1 }, uCam: { value: new THREE.Vector3() } };
   var travelGroup = new THREE.Group();
   scene.add(travelGroup);
   (function travelPetals() {
     var r = rng(91), set = new PointSet(), cs = ['#ff8c00', '#ffb21a', '#e8590c', '#c21e3a', '#f06a8a', '#ffd04a', '#fff0d8'].map(col);
-    for (var k = 0; k < (small ? 150 : 260); k++) set.add((r() - 0.5) * 26, (r() - 0.5) * 14, (r() - 0.5) * 26, 0, r(), 0, 0.8 + r() * 0.5, cs[k % cs.length]);
+    for (var k = 0; k < (small ? 420 : 700); k++) set.add((r() - 0.5) * 20, (r() - 0.5) * 11, (r() - 0.5) * 20, r(), r(), 0, 0.8 + r() * 0.6, cs[k % cs.length]);
     pointKit(TU, travelGroup).add(set,
-      'vec4 place(){ vec3 B = vec3(26.0, 14.0, 26.0); float s = aData.y;\n' +
+      'vec4 place(){ vec3 B = vec3(20.0, 11.0, 20.0); float s = aData.y;\n' +
       ' vec3 p = position + vec3(uTime * 0.6 + sin(uTime * 0.7 + s * 20.0) * 0.8, -uTime * (0.45 + s * 0.4), sin(uTime * 0.45 + s * 9.0) * 0.8);\n' +
       ' p = uCam + mod(p - uCam + B * 0.5, B) - B * 0.5; vCol = aCol * uLit;\n' +
-      ' return vec4(p, uAmt); }\n',
+      ' return vec4(p, smoothstep(aData.x * 3.0, aData.x * 3.0 + 0.35, uAmt)); }\n',
       [[PETAL_F, 0.13, 1.5, 8, true, 1.2]]);
   })();
 
@@ -118,6 +122,9 @@ export function createWorld(K, opts) {
   var f = { time: reduce ? 2.6 : 0, dt: 0, tod: 6, P: sky.P, cam: camera, pxScale: 600, fogD: 0.0085, small: small, reduce: reduce,
             mx: 0, my: 0, aspect: 1, u: 0, w: 1, ys: 0, travel: 0, lamp: lamp, world: null };
   var override = null;      // the gate drives the camera until the doors are through
+  var raysK = 0, viaP = new THREE.Vector3(), viaT = new THREE.Vector3();
+  function bez(out, a, v, b, e) { var u = 1 - e; out.set(a.x * u * u + 2 * v.x * u * e + b.x * e * e, a.y * u * u + 2 * v.y * u * e + b.y * e * e, a.z * u * u + 2 * v.z * u * e + b.z * e * e); }
+  var hazeK = 0, hazeC = new THREE.Color(), hazeL = new THREE.Color(), WHITE = new THREE.Color('#ffffff');
   var ys = window.scrollY, mx = 0, my = 0, tmx = 0, tmy = 0, fine = mq('(pointer: fine)');
   var raf = 0, running = false, dead = false, last = 0, lastInput = 0, frameNo = 0, dirtyMeasure = true, need = true;
   var visibleNow = {}, lastDark = -1, failHooks = [];
@@ -156,19 +163,32 @@ export function createWorld(K, opts) {
     if (!seg.a) return false;
     poseOf(seg.a, seg.la, poseA);
     if (!seg.b) {
-      pose.pos.copy(poseA.pos); pose.tgt.copy(poseA.tgt); pose.tod = pose.tod2 = poseA.tod; pose.e = 0; pose.mist = poseA.mist; f.travel = 0; seg.e = 0;
+      pose.pos.copy(poseA.pos); pose.tgt.copy(poseA.tgt); pose.tod = pose.tod2 = poseA.tod; pose.e = 0; pose.mist = poseA.mist; f.travel = 0; seg.e = 0; hazeK = 0;
+      pose.thr = null; raysK = 0;
     } else {
       poseOf(seg.b, seg.lb, poseB);
       var t = seg.t, e = smooth(0, 1, t), arc = Math.sin(Math.PI * t);
       if (reduce) e = t < 0.5 ? 0 : 1;
       seg.e = e;
-      pose.pos.lerpVectors(poseA.pos, poseB.pos, e);
-      pose.tgt.lerpVectors(poseA.tgt, poseB.tgt, e);
-      // Arc up between places, the gaze lifting with it (over roofs and domes, not into them).
-      if (!reduce) { pose.pos.y += (seg.b.arc || 0) * arc; pose.tgt.y += (seg.b.arc || 0) * (seg.b.tilt == null ? 0.5 : seg.b.tilt) * arc; }
+      if (seg.b.via && !reduce) {
+        // A route of its own: a curve through a waypoint for the eye and for the gaze.
+        seg.b.via(f, viaP, viaT);
+        bez(pose.pos, poseA.pos, viaP, poseB.pos, e);
+        bez(pose.tgt, poseA.tgt, viaT, poseB.tgt, e);
+      } else {
+        pose.pos.lerpVectors(poseA.pos, poseB.pos, e);
+        pose.tgt.lerpVectors(poseA.tgt, poseB.tgt, e);
+        // Arc up between places, the gaze lifting with it (over roofs and domes, not into them).
+        if (!reduce) { pose.pos.y += (seg.b.arc || 0) * arc; pose.tgt.y += (seg.b.arc || 0) * (seg.b.tilt == null ? 0.5 : seg.b.tilt) * arc; }
+      }
       pose.tod = poseA.tod; pose.tod2 = poseB.tod; pose.e = e;
+      pose.thr = seg.b.through != null && !reduce ? seg.b.through : null;
+      raysK = seg.b.rays && !reduce ? seg.b.rays * smooth(0.2, 0.5, t) * (1 - smooth(0.62, 0.95, t)) : 0;
       pose.mist = lerp(poseA.mist, poseB.mist, e) + (reduce ? 0 : (seg.b.mist || 0) * arc);
       f.travel = reduce ? 0 : arc;
+      f.petals = seg.b.petals || 1;
+      hazeK = seg.b.haze && !reduce ? Math.pow(arc, 0.8) * (seg.b.hazeAmt == null ? 1 : seg.b.hazeAmt) : 0;
+      if (hazeK) hazeC.set(seg.b.haze);
     }
     return true;
   }
@@ -209,9 +229,10 @@ export function createWorld(K, opts) {
     if (seg.a) mark(seg.a.places);
     if (seg.b) mark(seg.b.places);
     if (override && override.places) mark(override.places);
-    // Build ahead: this stop's places and the next stop's (never while the gate opens).
-    var ix = timeline.stops.indexOf(seg.b || seg.a);
-    for (var k = Math.max(0, ix); !override && k < Math.min(timeline.stops.length, ix + 2); k++) {
+    // Build ahead: the places of the stop we are at (or leaving), the one we
+    // are heading to, and the one after (never while the gate opens).
+    var ix = timeline.stops.indexOf(seg.a);
+    for (var k = Math.max(0, ix); !override && k < Math.min(timeline.stops.length, ix + 3); k++) {
       var ps = timeline.stops[k].places;
       for (var j = 0; j < ps.length; j++) if (places[ps[j]] && places[ps[j]].state === 'idle') ensure(ps[j]);
     }
@@ -224,9 +245,23 @@ export function createWorld(K, opts) {
     camera.rotateX(-my * 0.02);
 
     // Sky for the hour, then the places (which may tint it), then the sky's apply.
-    sky.blend(pose.tod, pose.tod2, pose.e);
+    // Between two hours, or through a third (night to morning by way of the dawn).
+    if (pose.thr != null && !override) {
+      if (pose.e < 0.5) sky.blend(pose.tod, pose.thr, smooth(0.04, 0.42, pose.e));
+      else sky.blend(pose.thr, pose.tod2, smooth(0.6, 0.97, pose.e));
+    } else sky.blend(pose.tod, pose.tod2, pose.e);
+    sky.P.rays = override ? 0 : raysK;
     f.tod = sky.P.tod;
-    sky.P.fd *= 1 + pose.mist;
+    sky.P.fd *= Math.max(0.15, 1 + pose.mist);
+    if (hazeK > 0 && !override) {
+      var P = sky.P, k = hazeK;
+      hazeL.copy(hazeC).lerp(WHITE, 0.35);
+      P.top.lerp(hazeC, k * 0.3); P.mid.lerp(hazeC, k * 0.62); P.hor.lerp(hazeL, k * 0.8); P.glow.lerp(hazeC, k * 0.55);
+      P.hs.lerp(hazeL, k * 0.5); P.hg.lerp(hazeC, k * 0.3); P.hi = lerp(P.hi, 1.35, k);
+      P.st *= 1 - k; P.br *= 1 - k; P.mo *= 1 - k;
+      P.rf.lerp(hazeL, k * 0.6); P.rm.lerp(hazeL, k * 0.5); P.rn.lerp(hazeC, k * 0.4);
+      P.fd *= 1 + 0.6 * k;
+    }
     f.fogD = sky.P.fd;
     f.pxScale = pxScale;
     nreq = 0;
@@ -245,7 +280,7 @@ export function createWorld(K, opts) {
     assignLights();
     TU.uTime.value = f.time; TU.uScale.value = pxScale; TU.uFogD.value = f.fogD * 0.5;
     TU.uCam.value.copy(camera.position);
-    TU.uAmt.value = f.travel * (override ? 0 : 1);
+    TU.uAmt.value = f.travel * (override ? 0 : f.petals || 1);
     TU.uLit.value = clamp(sky.P.hi * 0.6 + 0.2, 0.35, 1.1);
     travelGroup.visible = TU.uAmt.value > 0.002;
     // The fade that stands in for travel when motion is reduced.

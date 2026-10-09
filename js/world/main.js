@@ -133,7 +133,22 @@ function start() {
                                  pose: function (u, out, f) { homesPose(u, out, f); } });
     var terrace = W.timeline.add({ name: 'terrace', places: ['terrace', 'story'], arc: 8, tilt: 0.15, span: [0.25, 0.5],
                                    pose: function (u, out, f) { terracePose(u, out, f); } });
-    var morning = W.timeline.add({ name: 'morning', places: ['morning'], arc: 9, mist: 0.2, pose: Court.courtPose('morning', L.COURT_MORNING) });
+    // The celebrations: the events header and each event card have a place and an hour of their own.
+    // Out of the story's night: rise high over the trees, turn to the dawn
+    // breaking over the ridge (the sky passes through 6:30, with rays), then
+    // come down into the Haldi court through a drift of marigold petals.
+    var haldi = W.timeline.add({ name: 'haldi', places: ['haldi'], through: 6.6, rays: 1.2, haze: '#fff0d0', hazeAmt: 0.15, petals: 3, mist: -0.75,
+                                 via: function (f, P, T) {
+                                   var tall = f.aspect < 0.9;
+                                   P.set(tall ? 2 : 4, tall ? 52 : 54, tall ? -40 : -36);
+                                   T.set(tall ? 26 : 48, tall ? 34 : 36, tall ? -100 : -100);
+                                 },
+                                 span: [0.75, 0.75], pose: function (u, out, f) { celebPose('haldi', u, out, f); } });
+    var baraat = W.timeline.add({ name: 'baraat', places: ['baraat', 'hall'], arc: 7, tilt: 0.2, haze: '#ffb060', petals: 1.6, mist: 0.1,
+                                  span: [0.75, 0.75], pose: function (u, out, f) { celebPose('baraat', u, out, f); } });
+    var hall = W.timeline.add({ name: 'hall', places: ['hall'], arc: 1.2, tilt: 0, petals: 0.8,
+                                span: [0.75, 0.75], pose: function (u, out, f) { celebPose('hall', u, out, f); } });
+    var morning = W.timeline.add({ name: 'morning', places: ['morning'], arc: 8, mist: 0.15, pose: Court.courtPose('late', L.COURT_MORNING) });
     W.define('gate', function () { var p = Gate.build(W, { origin: L.COURT_DAWN }); p.stop = shrine; return p; });
     W.define('dawn', function () { var p = Court.build(W, { variant: 'dawn', origin: L.COURT_DAWN }); p.stop = shrine; return p; });
     W.define('shrine', function () { var p = Shrine.build(W, { origin: L.COURT_DAWN }); p.stop = shrine; return p; });
@@ -141,7 +156,15 @@ function start() {
     W.define('homes', function () { return homesMod.then(function (H) { return idle(1500).then(function () { var p = H.build(W); p.stop = homes; return p; }); }); });
     W.define('terrace', function () { return terraceMod.then(function (T) { return idle(1500).then(function () { var p = T.build(W); p.stop = terrace; return p; }); }); });
     W.define('morning', function () {
-      return idle(1500).then(function () { var p = Court.build(W, { variant: 'morning', origin: L.COURT_MORNING }); p.stop = morning; return p; });
+      return idle(1500).then(function () { var p = Court.build(W, { variant: 'late', origin: L.COURT_MORNING }); p.stop = morning; return p; });
+    });
+    [['haldi', haldi], ['baraat', baraat], ['hall', hall]].forEach(function (d) {
+      W.define(d[0], function () {
+        return import('./places/' + d[0] + '.js').then(function (P) {
+          celebPoses[d[0]] = P.pose;
+          return idle(1500).then(function () { var p = P.build(W); p.stop = d[1]; return p; });
+        });
+      });
     });
     return Promise.all([W.ensure('gate'), W.ensure('dawn'), W.ensure('shrine')]);
   }).then(function (built) {
@@ -164,6 +187,12 @@ function start() {
   }).catch(function (err) { giveUp(err); });
 
   var storyModule = null, homesMod = null, terraceMod = null;
+  // Each celebration's camera comes with its code; until then a stand-in on its axis.
+  var celebPoses = {}, CELEB_Z = { haldi: -92, baraat: -140, hall: -198 }, CELEB_TOD = { haldi: 9.2, baraat: 18.4, hall: 21.8 };
+  function celebPose(name, u, out, f) {
+    if (celebPoses[name]) return celebPoses[name](u, out, f);
+    out.pos.set(0, 3, CELEB_Z[name] + 12); out.tgt.set(0, 3, CELEB_Z[name] - 10); out.tod = CELEB_TOD[name]; out.mist = 0;
+  }
   var homesPose = function (u, out, f) { out.pos.set(0, 3, 80); out.tgt.set(0, 3, 56); out.tod = 8.5; out.mist = 0; };
   var homesSpan = function () { return [0.3, 0.15]; };
   var terracePose = function (u, out) { out.pos.set(0, 8.8, 53); out.tgt.set(0, 6.5, 18); out.tod = 17; out.mist = 0; };

@@ -26,6 +26,14 @@ var KEYS = {
     [0.18,        0,   3.4,  -9.5,    0,   2.2,  -32,   31.2,  0],
     [0.6,         2.6, 2.4,  -15,     0,   2.0,  -36,   32.6,  0],
     [1,           0,   2.1,  -19.5,   0,   3.2,  -44,   33.6,  0]
+  ],
+  // After the reception: the same court late at night, every lamp lit
+  // (it carries the venue, RSVP and footer until Phase 4 gives them places).
+  late: [
+    [0,           0,   9.5,  -5.5,    0,   1.0,  -27,   22.4,  0.1],
+    [0.18,        0,   3.4,  -9.5,    0,   2.2,  -32,   22.7,  0],
+    [0.6,         2.6, 2.4,  -15,     0,   2.0,  -36,   23.2,  0],
+    [1,           0,   2.1,  -19.5,   0,   3.2,  -44,   23.6,  0]
   ]
 };
 
@@ -437,7 +445,7 @@ export function build(W, opts) {
   function frame(f) {
     var P = f.P, time = f.time;
     // Lamps burn through dawn and go out as the morning brightens.
-    var lit = dawn ? 1 - smooth(7.0, 9.5, (f.tod % 24 + 24) % 24) * 0.7 : 0;
+    var lit = dawn ? 1 - smooth(7.0, 9.5, (f.tod % 24 + 24) % 24) * 0.7 : variant === 'late' ? 1 : 0;
     U.uTime.value = time; U.uScale.value = f.pxScale; U.uFogD.value = f.fogD * 0.5;
     U.uOn.value = lit; U.uGlow.value = 1;
     U.uLit.value = clamp(P.hi * 0.62 + 0.15, 0.4, 1.15);

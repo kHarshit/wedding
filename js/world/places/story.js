@@ -654,7 +654,7 @@ function createScene(W) {
     U.uScale.value = f.pxScale;
     U.uWalk.value = walk; U.uTalk.value = talk; U.uGather.value = gather; U.uCarry.value = carry;
     U.uFire.value = fire; U.uPetal.value = row[C.petal]; U.uPhera.value = row[C.phera];
-    U.uFest.value = fest; U.uLant.value = row[C.lant]; U.uFw.value = row[C.fw]; U.uDrift.value = row[C.drift];
+    U.uFest.value = fest; U.uLant.value = row[C.lant]; U.uFw.value = row[C.fw] * smooth(0.55, 0.9, f.w);   // the fireworks end as we leave for the morning U.uDrift.value = row[C.drift];
     U.uNight.value = night;
     U.uLit.value = lerp(1.0, 0.45, night) + fire * 0.45 + fest * 0.2;
     U.uFogD.value = f.fogD * 0.49;
@@ -773,9 +773,11 @@ export function mount(W) {
     set(dom.vignette, 'opacity', (smooth(-0.1, 0.14, uu) * (1 - smooth(TOTAL - 0.1, TOTAL + 0.6, uu))).toFixed(3));
     beat(dom.intro, 0.06, 0.24, S(0) - 0.16, S(0) + 0.02, uu);
     for (var i = 0; i < dom.panels.length; i++) beat(dom.panels[i], S(i), S(i) + FADE, E(i) - FADE, E(i), uu);
-    var oIn = smooth(E(3) + 0.02, E(3) + 0.28, uu);
-    set(dom.outro, 'opacity', oIn.toFixed(3));
-    set(dom.outro, 'visibility', oIn > 0.002 ? 'visible' : 'hidden');
+    // The names arrive after Forever Begins, and leave as the stage lets go
+    // (the night breaks into the Haldi morning behind them).
+    var oIn = smooth(E(3) + 0.02, E(3) + 0.28, uu), oOut = smooth(TOTAL - 0.05, TOTAL + 0.18, uu);
+    set(dom.outro, 'opacity', (oIn * (1 - oOut)).toFixed(3));
+    set(dom.outro, 'visibility', oIn * (1 - oOut) > 0.002 ? 'visible' : 'hidden');
     set(dom.outro, '--y', ((1 - oIn) * 26).toFixed(1) + 'px');
   }
 

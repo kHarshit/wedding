@@ -43,6 +43,7 @@ var HOURS = [
 HOURS.push([24, HOURS[0][1]]);
 HOURS.sort(function (a, b) { return a[0] - b[0]; });
 export var STORY_DUSK = 18.7, STORY_NIGHT = 21.0;
+export var SUNRISE = 2.3;   // the sun's azimuth at dawn (radians from +z towards +x)
 var COLS = ['top', 'mid', 'hor', 'glow', 'hs', 'hg', 'sc', 'rf', 'rm', 'rn'];
 var NUMS = ['hi', 'si', 'mi', 'so', 'st', 'br', 'mo', 'fd'];
 HOURS.forEach(function (h) { COLS.forEach(function (c) { h[1][c] = col(h[1][c]); }); });
@@ -53,18 +54,22 @@ export function createSky(K, scene, small) {
   scene.add(group);
   var U = {
     uTop: { value: col('#000') }, uMid: { value: col('#000') }, uHor: { value: col('#000') }, uGlow: { value: col('#000') },
-    uSunXZ: { value: new THREE.Vector2(0, -1) }, uSun: { value: new THREE.Vector3(0, 0, -1) }, uSunC: { value: col('#fff') }, uSunO: { value: 0 }
+    uSunXZ: { value: new THREE.Vector2(0, -1) }, uSun: { value: new THREE.Vector3(0, 0, -1) }, uSunC: { value: col('#fff') }, uSunO: { value: 0 }, uRays: { value: 0 }
   };
   group.add(new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false, uniforms: U,
     vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: 'uniform vec3 uTop; uniform vec3 uMid; uniform vec3 uHor; uniform vec3 uGlow; uniform vec2 uSunXZ; uniform vec3 uSun; uniform vec3 uSunC; uniform float uSunO; varying vec3 vP;\n' +
+    fragmentShader: 'uniform vec3 uTop; uniform vec3 uMid; uniform vec3 uHor; uniform vec3 uGlow; uniform vec2 uSunXZ; uniform vec3 uSun; uniform vec3 uSunC; uniform float uSunO; uniform float uRays; varying vec3 vP;\n' +
       'void main(){ vec3 d = normalize(vP); float h = d.y;\n' +
       ' vec3 c = mix(uHor, uMid, smoothstep(-0.01, 0.2, h)); c = mix(c, uTop, smoothstep(0.16, 0.72, h));\n' +
       ' float az = max(dot(normalize(d.xz + 1e-5), uSunXZ), 0.0);\n' +
       ' c += uGlow * pow(az, 3.0) * exp(-max(h, 0.0) * 7.0);\n' +
       ' float s = max(dot(d, uSun), 0.0);\n' +
       ' c += uSunC * uSunO * (smoothstep(0.9993, 0.9997, s) * 2.2 + pow(s, 60.0) * 0.35 + pow(s, 8.0) * 0.12);\n' +
+      // Rays fanning out from the sun as it breaks the horizon (P.rays).
+      ' if (uRays > 0.001) { vec3 t1 = normalize(cross(uSun, vec3(0.0, 1.0, 0.0)) + 1e-5); vec3 t2 = cross(t1, uSun);\n' +
+      '  float an = atan(dot(d, t2), dot(d, t1)); float ray = pow(0.5 + 0.5 * sin(an * 15.0 + sin(an * 4.0) * 1.7), 4.0);\n' +
+      '  c += uSunC * uRays * ((ray * 0.6 + 0.2) * pow(s, 10.0) * smoothstep(-0.12, 0.05, h) + pow(s, 120.0) * 0.8); }\n' +
       ' gl_FragColor = vec4(c, 1.0);' + CS + '}'
   })));
   // The same stars the story had (same seed, same order).
@@ -133,9 +138,10 @@ export function createSky(K, scene, small) {
     var a = HOURS[i], b = HOURS[i + 1], t = clamp((h - a[0]) / (b[0] - a[0]), 0, 1);
     for (var c = 0; c < COLS.length; c++) Q[COLS[c]].copy(a[1][COLS[c]]).lerp(b[1][COLS[c]], t);
     for (var n = 0; n < NUMS.length; n++) Q[NUMS[n]] = lerp(a[1][NUMS[n]], b[1][NUMS[n]], t);
-    // The sun rises in the east (+z, swung well round to +x, so mornings are
-    // side-lit) and sets due west (-z), behind the mandap.
-    var s = (h - 6) / 12.3, phi = lerp(1.15, Math.PI, clamp(s, 0, 1)), el = Math.sin(Math.PI * clamp(s, -0.1, 1.1)) * 1.22;
+    // The sun rises ahead and to the right (looking down the estate, -z),
+    // so mornings are side- and back-lit, and sets due west (-z), behind
+    // the mandap.
+    var s = (h - 6) / 12.3, phi = lerp(SUNRISE, Math.PI, clamp(s, 0, 1)), el = Math.sin(Math.PI * clamp(s, -0.1, 1.1)) * 1.22;
     Q.sunDir.set(Math.sin(phi) * Math.cos(el), Math.sin(el), Math.cos(phi) * Math.cos(el));
     var le = Math.max(el, 0.119);
     Q.lightDir.set(Math.sin(phi) * Math.cos(le), Math.sin(le), Math.cos(phi) * Math.cos(le));
@@ -160,7 +166,7 @@ export function createSky(K, scene, small) {
   function apply(camera, time, still) {
     U.uTop.value.copy(P.top); U.uMid.value.copy(P.mid); U.uHor.value.copy(P.hor); U.uGlow.value.copy(P.glow);
     U.uSunXZ.value.set(P.sunDir.x, P.sunDir.z).normalize();
-    U.uSun.value.copy(P.sunDir); U.uSunC.value.copy(P.sc); U.uSunO.value = P.so;
+    U.uSun.value.copy(P.sunDir); U.uSunC.value.copy(P.sc); U.uSunO.value = P.so; U.uRays.value = P.rays || 0;
     hor.copy(P.hor);
     fog.color.copy(hor).multiplyScalar(0.9);
     fog.density = P.fd;

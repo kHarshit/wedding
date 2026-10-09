@@ -233,3 +233,21 @@ html:has(body.world-on){transition:--world-ink .4s ease,--world-ink-soft .4s eas
 .world-on .map-card .veil{background:rgba(28,12,24,.62)}
 .world-on .map-card .veil span{color:#ffe6b0;font-weight:700}
 .world-on .si-cue{color:rgba(255,242,220,.98)}
+
+/* ── The celebrations: each card over its own place ──
+   Room above the header for the night to break into the Haldi morning, and
+   room between the cards for the camera to travel and each place to read.
+   Wide screens set the cards to one side (alternating), the place beside. */
+.world-on .ev-sec{padding-top:85svh;padding-bottom:40svh}
+.world-on .ev-wrap{gap:95svh}
+.world-on .event{max-width:560px;margin-left:auto;margin-right:auto}
+@media (min-width:900px){
+  .world-on .ev-head{margin-left:0;margin-right:auto}
+  .world-on .event{max-width:720px;margin-left:0;margin-right:auto}
+  .world-on .event.rev{margin-left:auto;margin-right:0}
+}
+@media (min-width:1024px){.world-on .event .ev-img{min-height:330px}}
+
+.world-on .ev-date{letter-spacing:.24em;font-size:.82rem}
+/* The form's glass follows the hour too (cream by day, plum by night). */
+.world-on .rsvp-card{--glass:var(--panel)}
