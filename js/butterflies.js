@@ -97,6 +97,8 @@
   var last=performance.now();
   var raf;
   function frame(t){
+    // The 3D world (js/world) brings its own creatures; rest while it runs.
+    if(document.body.classList.contains("world-on")){last=t;raf=requestAnimationFrame(frame);return;}
     var dt=Math.min(.05,(t-last)/1000);last=t;
     var W=window.innerWidth,H=window.innerHeight;
     list.forEach(function(e){

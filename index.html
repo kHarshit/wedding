@@ -33,6 +33,7 @@
 <link rel="stylesheet" href="css/sections/venue.css">
 <link rel="stylesheet" href="css/sections/rsvp.css">
 <link rel="stylesheet" href="css/sections/footer.css">
+<link rel="stylesheet" href="css/world.css">
 </head>
 <body>
 
@@ -66,7 +67,7 @@
   <div class="corner-floral br out"><img src="assets/images/bottomflowers.webp" alt=""></div>
 
   <!-- Ganesha -->
-  <section class="section" id="invite">
+  <section class="section" id="invite" data-stop="court">
     <div class="gan-outer">
       <div class="gan-in">
         <div class="gan-top"></div>
@@ -93,7 +94,7 @@
   </section>
 
   <!-- Invitation card -->
-  <section class="section rad card-sec" id="invitation">
+  <section class="section rad card-sec" id="invitation" data-stop="court">
     <div class="glow c2"></div>
     <div class="container">
       <div class="card reveal" style="transform:translateY(24px)">
@@ -149,7 +150,7 @@
   </div>
 
   <!-- Countdown -->
-  <section class="section rad count-sec">
+  <section class="section rad count-sec" data-stop="court">
     <div class="glow c1"></div>
     <div class="container">
       
@@ -221,7 +222,7 @@
   </div>
 
   <!-- Our Story -->
-  <section class="section rad story-sec">
+  <section class="section rad story-sec" data-stop="story">
     <div class="glow c3"></div>
     <div class="container">
       <div class="story-head reveal" style="transform:translateY(36px)">
@@ -294,7 +295,7 @@
   </div>
 
   <!-- The Celebrations -->
-  <section class="section rad ev-sec">
+  <section class="section rad ev-sec" data-stop="morning">
     <div class="glow c4"></div>
     <div class="container">
       <div class="ev-head reveal" style="transform:translateY(36px)">
@@ -367,7 +368,7 @@
   </div>
 
   <!-- The Venue -->
-  <section class="section rad venue-sec">
+  <section class="section rad venue-sec" data-stop="morning">
     <div class="glow c4"></div>
     <div class="container">
       <div class="venue-head reveal" style="transform:translateY(24px)">
@@ -404,7 +405,7 @@
   </div>
 
   <!-- RSVP -->
-  <section class="section rad rsvp-sec" id="rsvp">
+  <section class="section rad rsvp-sec" id="rsvp" data-stop="morning">
     <div class="glow c4"></div>
     <div class="container">
       <div class="rsvp-head reveal" style="transform:translateY(24px)">
@@ -439,7 +440,7 @@
     </div>
   </section>
 
-  <footer>
+  <footer data-stop="morning">
     <div class="glow c5"></div>
     <div class="hair"></div>
     <div class="container">
@@ -479,6 +480,6 @@
 <script src="js/butterflies.js"></script>
 <script src="js/scroll-cue.js"></script>
 <script src="js/rsvp.js"></script>
-<script type="module" src="js/immersive/story.js"></script>
+<script type="module" src="js/world/main.js"></script>
 </body>
 </html>

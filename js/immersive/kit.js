@@ -1,10 +1,11 @@
 /*
- * Shared three.js helpers for the immersive "Our Story" scene.
+ * Shared three.js helpers for the world (js/world).
  *
  * A trimmed copy of the kit behind the immersive poems on kharshit.github.io
- * (js/site/immersive/kit.js): three.js is pinned here, in one place, and the
- * scene builds its world from these pieces. story.js imports this file only
- * when the story section comes near, so three.js never slows the intro.
+ * (js/site/immersive/kit.js): three.js is pinned here, in one place, and is
+ * only ever imported through this file. js/world/main.js loads it at page
+ * start (unless WebGL is missing or the guest prefers reduced data) while
+ * the door poster shows.
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
 

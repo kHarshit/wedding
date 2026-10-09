@@ -1,9 +1,13 @@
-/* Intro gate: plays the door video on tap, then reveals the page and starts the music */
+/* Intro gate: plays the door video on tap, then reveals the page and starts the music.
+   js/world can stand in for the video with its 3D doors: it registers through
+   window.weddingIntro.useGate({open:function(done,fallback){...}}), and the tap
+   then calls open(begin, playVideo) instead of playing the video. */
 (function(){
   "use strict";
   var main=document.querySelector("main"), intro=document.getElementById("intro"), musicBtn=document.getElementById("music");
   var started=false;
   var gateStarted=false;
+  var gate=null,primed=false;
   var v=document.querySelector("#intro video");
 
   function setPlaying(on){
@@ -28,7 +32,8 @@
   // unlocks playback on iOS, so it can start the moment the video ends.
   function primeMusic(){
     var m=document.getElementById("wedding-music");
-    if(!m)return;
+    if(!m||primed)return;
+    primed=true;
     m.preload="auto"; m.muted=true;
     var p=m.play();
     if(p&&p.then)p.then(function(){if(!started){m.pause();m.currentTime=0;}}).catch(function(){});
@@ -47,6 +52,16 @@
 
   function playGate(){
     if(gateStarted)return; gateStarted=true;
+    if(gate){
+      primeMusic();
+      setTimeout(function(){if(!started)begin();},20000);
+      try{gate.open(begin,playVideo);}catch(e){playVideo();}
+      return;
+    }
+    playVideo();
+  }
+
+  function playVideo(){
     if(!v)return begin();
     primeMusic();
     // Safety net if the video stalls after the tap (the clip is ~8s long)
@@ -65,8 +80,13 @@
   });
   if(v){
     v.addEventListener("ended",begin);
-    v.addEventListener("error",begin);
+    v.addEventListener("error",function(){if(!gate)begin();});
   }
+
+  window.weddingIntro={
+    useGate:function(g){gate=g||null;},
+    state:function(){return started?"begun":gateStarted?"opening":"waiting";}
+  };
 
   musicBtn.addEventListener("click",function(){
     var m=document.getElementById("wedding-music");

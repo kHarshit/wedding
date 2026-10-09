@@ -1,0 +1,88 @@
+/* The page over the world (js/world). Nothing here applies until the world
+   has started and set body.world-on; without it (no WebGL, reduced data, or
+   a fallback) the cream design is untouched.
+
+   The world's canvas is fixed behind <main>. Section backgrounds go clear and
+   the content sits on "lamplit glass": warm translucent cream with a gold
+   hairline and a soft inner glow, so the ink stays legible as the hours pass
+   behind it. The corner florals and the DOM butterflies step aside. */
+
+.world-canvas,.world-fade{display:none}
+.world-on .world-canvas{display:block;position:fixed;left:0;top:0;z-index:0;width:100%;height:100vh;height:100lvh;pointer-events:none}
+.world-on .world-fade{display:block;position:fixed;inset:0;z-index:0;background:#1a1020;opacity:0;visibility:hidden;pointer-events:none}
+html:has(body.world-on){background:#1a1020}
+body.world-on{background:#1a1020}
+.world-on main{position:relative;z-index:1}
+
+/* ── The gate: the live doors replace the video once they are drawn ── */
+.world-gate #intro{background:transparent}
+.world-gate #intro video{opacity:0;transition:opacity 1.2s ease;pointer-events:none}
+/* Tapped before the doors were ready: a quiet sign that they are coming. */
+#intro.world-wait::after{content:"";position:absolute;left:50%;bottom:calc(14% + 6px);width:26px;height:26px;margin-left:-13px;border-radius:50%;
+  border:1px solid rgba(255,226,160,.25);border-top-color:rgba(255,226,160,.9);animation:worldWait 1s linear infinite}
+@keyframes worldWait{to{transform:rotate(360deg)}}
+
+/* ── Decor that belongs to the cream page ── */
+.world-on .corner-floral,.world-on #flutter{display:none!important}
+.world-on .glow{display:none}
+.world-on footer{background:transparent}
+
+/* ── Lamplit glass ── */
+.world-on{
+  --glass:linear-gradient(180deg,rgba(255,250,240,.82),rgba(250,238,214,.74));
+  --glass-edge:rgba(200,146,52,.5);
+  --glass-shadow:inset 0 0 0 1px rgba(255,244,222,.45),inset 0 0 42px rgba(255,186,96,.22),0 22px 60px rgba(26,10,22,.30),0 2px 10px rgba(26,10,22,.16);
+  --glass-blur:blur(14px) saturate(1.12);
+}
+@media (max-width:640px){.world-on{--glass:linear-gradient(180deg,rgba(255,250,240,.86),rgba(250,238,214,.8));--glass-blur:blur(8px)}}
+
+.world-on .gan-in,
+.world-on .card,
+.world-on .count-sec .container,
+.world-on .story-head,
+.world-on .ev-head,
+.world-on .event,
+.world-on .venue-head,
+.world-on .venue-foot,
+.world-on .rsvp-head,
+.world-on .rsvp-card,
+.world-on footer .container{
+  background:var(--glass);
+  border:1px solid var(--glass-edge);
+  border-radius:6px;
+  box-shadow:var(--glass-shadow);
+  -webkit-backdrop-filter:var(--glass-blur);
+  backdrop-filter:var(--glass-blur);
+}
+
+/* Blocks that had no box of their own get some room inside the glass. */
+.world-on .gan-in{padding:clamp(1.8rem,5vw,2.8rem) clamp(1.4rem,6vw,3.2rem)}
+.world-on .gan-outer{background:none}
+.world-on .count-sec .container{max-width:760px;width:calc(100% - 2rem);padding-top:clamp(1.4rem,4svh,2.6rem);padding-bottom:clamp(1.4rem,4svh,2.6rem)}
+.world-on .story-head,.world-on .ev-head,.world-on .venue-head,.world-on .rsvp-head{max-width:640px;margin-left:auto;margin-right:auto;padding:clamp(1.6rem,5vw,2.4rem) clamp(1.2rem,5vw,2.4rem)}
+.world-on .story-head{margin-bottom:clamp(2.5rem,6vw,4rem)}
+.world-on .ev-head{margin-bottom:clamp(2rem,5vw,3rem)}
+.world-on .venue-foot{max-width:640px;margin:26px auto 0;padding:1.2rem 1.6rem}
+.world-on .rsvp-head{margin-bottom:clamp(1.6rem,4vw,2.4rem)}
+.world-on footer .container{max-width:560px;width:calc(100% - 2rem);padding-top:clamp(1.8rem,5vw,2.6rem);padding-bottom:clamp(1.6rem,4vw,2.2rem)}
+.world-on .ev-wrap{gap:clamp(24px,5vw,40px)}
+/* The form wants calm behind it. */
+.world-on .rsvp-card{--glass:linear-gradient(180deg,rgba(255,250,240,.93),rgba(250,238,214,.9))}
+.world-on .ev-spine{display:none}
+
+/* The tiles were glass already; give them the same edge. */
+.world-on .tile:before{background:rgba(255,248,236,.55);border-color:var(--glass-edge)}
+
+/* Ornaments between sections, and the scroll cue, float on the world in
+   the same dark glass as the story's Skip button. */
+.world-on .lotus-divider .ld-center{padding:7px 16px;border-radius:999px;border:1px solid rgba(240,196,106,.42);background:rgba(28,12,24,.4);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#f0c46a}
+.world-on .lotus-divider .ld-center svg.heart{color:#f4a3b6}
+.world-on .lotus-divider .ld-line{opacity:0}
+.world-on .scroll-cue{padding:10px 16px 8px;border-radius:999px;border:1px solid rgba(240,196,106,.42);background:rgba(28,12,24,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.world-on .scroll-cue .sc-label{color:rgba(255,240,214,.92)}
+.world-on .scroll-cue .sc-arrow{height:30px}
+.world-on .scroll-cue .sc-arrow .head{stroke:#f0c46a}
+
+/* The story's portrait sits on the world, framed in gold. */
+.world-on .portrait .frame{border-color:rgba(255,226,170,.6)}
+.world-on .portrait .box{box-shadow:0 22px 60px rgba(26,10,22,.35)}
