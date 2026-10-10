@@ -14,7 +14,7 @@
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, notchShape, shiftPts, swag, groundShade,
          Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, LANTERN_F, worldUV, stoneTexture, onionDome,
-         broadleaf, treeMesh, pool, diyaBowls } from '../lib.js';
+         broadleaf, treeMesh, pool, diyaBowls , Q, tag } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { keyed, cols } from '../timeline.js';
 import { HALL } from '../land.js';
@@ -228,7 +228,7 @@ export function build(W) {
     fl.push([Math.cos(a3) * arcR, arcY + Math.sin(a3) * arcR, wallZ + 0.15, 0.1, fCols[3]]);
   }
   for (var y3 = PH + 0.6; y3 < arcY; y3 += 0.12) [-1, 1].forEach(function (s) { fl.push([s * arcR, y3, wallZ + 0.15, 0.1, fCols[3]]); });
-  var flowers = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ color: '#ffffff', emissive: '#2a0a10' }), fl.length);
+  var flowers = new THREE.InstancedMesh(small ? new THREE.OctahedronGeometry(1, 0) : new THREE.IcosahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ color: '#ffffff', emissive: '#2a0a10' }), fl.length);
   var mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e3 = new THREE.Euler(), ps = new THREE.Vector3(), sc = new THREE.Vector3();
   fl.forEach(function (b2, i) {
     flowers.setMatrixAt(i, mtx.compose(ps.set(b2[0], b2[1], b2[2]), q4.setFromEuler(e3.set(r() * 3, r() * 3, 0)), sc.set(b2[3], b2[3], b2[3] * 0.7)));
@@ -294,7 +294,7 @@ export function build(W) {
   var FL = 'float fl(){ return 0.86 + 0.14 * sin(uTime * (7.0 + aData.y * 5.0) + aData.y * 40.0); }\n';
   pk.add(fairy, 'vec4 place(){ float tw = 0.7 + 0.3 * sin(uTime * (1.3 + aData.y * 2.0) + aData.y * 50.0); return vec4(position, tw); }\n', [[GLOW_F, 0.15, 1.5, 2]]);
   pk.add(flames, FL + 'vec4 place(){ vCol = vec3(1.0, 0.58, 0.22); return vec4(position, fl()); }\n', [[HALO_F, 0.5, 2.2, 1, false, 2], [FLAME_F, 0.16, 1.8, 2]]);
-  pk.add(crystals, 'vec4 place(){ float tw = pow(0.5 + 0.5 * sin(uTime * (2.0 + aData.y * 3.0) + aData.y * 60.0), 4.0); return vec4(position, 0.35 + 0.65 * tw); }\n', [[GLOW_F, 0.06, 1.4, 3]]);
+  tag(pk.add(crystals, 'vec4 place(){ float tw = pow(0.5 + 0.5 * sin(uTime * (2.0 + aData.y * 3.0) + aData.y * 60.0), 4.0); return vec4(position, 0.35 + 0.65 * tw); }\n', [[GLOW_F, 0.06, 1.4, 3]]), 'pts');
   group.add(diyaBowls(roofLamps, 1.2, small ? 8 : 12));
   pk.add(roofLamps, FL + 'vec4 place(){ vCol = vec3(1.0, 0.56, 0.22); return vec4(position + vec3(0.0, 0.18, 0.0), fl()); }\n',
     [[HALO_F, 0.7, 2.2, 1, false, 2], [FLAME_F, 0.2, 1.6, 2]]);
@@ -320,20 +320,20 @@ export function build(W) {
   // Sky lanterns rising from beyond the hall.
   var lant = new PointSet();
   for (var k4 = 0; k4 < (small ? 30 : 50); k4++) { var lx = (r() < 0.5 ? -1 : 1) * (10 + r() * 22); lant.add(lx, 1 + r() * 4, 8 - r() * 44, r() * 0.5, r(), 0, 0.8 + r() * 0.5); }
-  pk.add(lant,
+  tag(pk.add(lant,
     'vec4 place(){ float s = aData.y, t = clamp((uLant - aData.x) / 0.5, 0.0, 1.0) + fract(uTime * 0.012 + s) * 0.0;\n' +
     ' float up = 6.0 + t * (10.0 + s * 26.0) + mod(uTime * (0.25 + s * 0.2) + s * 40.0, 40.0);\n' +
     ' vec3 p = position + vec3(sin(uTime * 0.25 + s * 30.0) * 0.6 + up * 0.1 * (s - 0.4), up, -up * 0.15 * s);\n' +
     ' float fl = 0.85 + 0.15 * sin(uTime * 7.0 + s * 40.0);\n' +
     ' return vec4(p, (0.35 + 0.65 * smoothstep(0.0, 0.2, t)) * fl * (1.0 - smoothstep(34.0, 46.0, up))); }\n',
-    [[LANTERN_F, 0.75, 2.4, 3]]);
+    [[LANTERN_F, 0.75, 2.4, 3]]), 'pts');
   // Warm bokeh: big soft lights drifting close to the camera, out of focus.
   var bokeh = new PointSet(), bCols = [col('#ffcf8a'), col('#ffb070'), col('#ffe2b0'), col('#f6a0b0')];
   for (k4 = 0; k4 < (small ? 22 : 36); k4++) bokeh.add((r() - 0.5) * 12, 1 + r() * 5, 4 + r() * 8, 0, r(), 0, 0.7 + r() * 0.8, bCols[k4 % 4]);
-  pk.add(bokeh,
+  tag(pk.add(bokeh,
     'vec4 place(){ float s = aData.y; vec3 p = position + vec3(sin(uTime * 0.12 + s * 20.0) * 0.8, sin(uTime * 0.17 + s * 13.0) * 0.4, cos(uTime * 0.1 + s * 9.0) * 0.6);\n' +
     ' return vec4(p, 0.16 * (0.6 + 0.4 * sin(uTime * 0.6 + s * 30.0))); }\n',
-    [[HALO_F, 0.9, 6.0, 9]]);
+    [[HALO_F, 0.9, 6.0, 9]]), 'lowSkip');
 
   // ── Assemble ───────────────────────────────────────────────────────────
   var stone = merge(g);
@@ -342,7 +342,8 @@ export function build(W) {
   group.add(new THREE.Mesh(stone, new THREE.MeshLambertMaterial({ vertexColors: true, map: stoneTexture(), emissive: '#5a3612' })));
   group.add(new THREE.Mesh(merge(chand), new THREE.MeshPhongMaterial({ vertexColors: true, emissive: '#7a5214', specular: '#ffe6a8', shininess: 60 })));
   if (glow.length) group.add(new THREE.Mesh(merge(glow), new THREE.MeshBasicMaterial({ vertexColors: true, fog: true })));
-  group.add(G.mesh('#3a1004', small));
+  var garlands = G.mesh('#3a1004', small);
+  group.add(garlands);
   var poolTex = softSprite('rgba(255,170,90,1)', 'rgba(255,120,40,0)');
   var pools = [pool(group, poolTex, 0, PH, -12.5, 14, 0.9), pool(group, poolTex, 0, PH + 0.56, -D + 2, 7)];
   lawnLamps.forEach(function (l) { pools.push(pool(group, poolTex, l[0], 0, l[1], 3.4)); });
@@ -350,7 +351,11 @@ export function build(W) {
   [-1, 1].forEach(function (s) { pools.push(pool(group, poolTex, s * (HW - 1), 0.02, 2.0, 7, 1.4)); });
 
   var warmS = col('#ffcf9a'), warmG = col('#7a4a24');
+  var centreW = new THREE.Vector3(o.x, 3, o.z - 13);
   function frame(f) {
+    // From the Baraat avenue the hall is a glow through the gate: its
+    // thousands of garland flowers wait until we come closer.
+    garlands.visible = W.camera.position.distanceTo(centreW) < 48;
     U.uTime.value = f.time; U.uScale.value = f.pxScale; U.uFogD.value = f.fogD * 0.5;
     U.uLant.value = f.u * f.w + (1 - f.w) * 0.2;
     U.uLit.value = clamp(f.P.hi * 0.6 + 0.3, 0.5, 1.1);
@@ -366,5 +371,6 @@ export function build(W) {
     W.lamp(o.x, PH + 2.2, o.z - D + 2.5, '#ffb070', 10, 10, 1.4);
     W.lamp(o.x, PH + 0.8, o.z + 1.4, '#ff9a48', 8 * fl, 9, 1.6);
   }
-  return { group: group, frame: frame };
+  // It has a stand-in in estate.js, so from far away it can step aside.
+  return { group: group, frame: frame, centre: new THREE.Vector3(o.x, 3, o.z - 13) };
 }

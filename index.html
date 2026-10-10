@@ -43,6 +43,12 @@
   if(!g)return;
   var x=g.getExtension("WEBGL_lose_context");if(x)x.loseContext();
   document.documentElement.classList.add("world-likely");
+  // Start fetching the gate's modules now, in parallel, rather than one by
+  // one as each import is discovered (only when the 3D gate will be used).
+  ["https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js","js/immersive/kit.js","js/world/main.js","js/world/engine.js",
+   "js/world/lib.js","js/world/sky.js","js/world/land.js","js/world/timeline.js","js/world/places/gate.js","js/world/places/court.js",
+   "js/world/places/shrine.js"].forEach(function(h){var l=document.createElement("link");l.rel="modulepreload";l.href=h;
+     if(/^https:/.test(h))l.crossOrigin="anonymous";document.head.appendChild(l);});
 }catch(e){}})();
 </script>
 </head>
@@ -53,11 +59,7 @@
 
 <audio id="wedding-music" src="assets/audio/Ordinary-piano.mp3" preload="none" loop></audio>
 
-<button id="music" aria-label="Play music" aria-pressed="false" style="opacity:0;transform:scale(.85)">
-  <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-</button>
 
-<a id="skipRsvp" class="skip-rsvp" href="#rsvp" aria-label="Skip to the RSVP">RSVP <span aria-hidden="true">&darr;</span></a>
 
 <div class="grain" aria-hidden="true"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="om" viewBox="0 0 512 512"><path d="M379.625 19.844c-16.74.187-34.18 4.942-50.22 13.625-12.754 6.905-24.542 16.552-34.28 28.5-1.217-1.252-2.578-2.38-3.72-3.69-47.612-54.672-125.46-43.178-160.75 1.345-5.91 4.88-9.686 12.268-9.686 20.53 0 14.692 11.9 26.595 26.593 26.595 14.69 0 26.625-11.903 26.625-26.594 0-10.035-5.578-18.75-13.782-23.28 31.8-23.023 82.904-25.36 116.906 13.687 2.22 2.546 4.53 4.972 6.938 7.312-11.28 19.99-17.145 44.58-13.906 72.78-12.262-16.69-31.758-28.007-55.094-27.5-12.29.27-25.64 3.807-39.563 11.564-60.394 33.638-37.274 103.51-153.375 103.686 47.213 28.976 95.146 41.69 136.938 41.844-14.583 71.33 33.297 162.234 146.813 212-55.354-96.272 18.237-128.528 44.906-186.063 60.407 9.56 105.242-59.912 134.374 53.5 27.68-154.03-86.917-220.388-158.53-211.937-14.422 1.703-26.155 7.967-34.94 17.094-7.646-30.47-3.774-55.575 6.563-75.25 27.31 19.926 61.414 29.575 90.313 29.47 18.49-.07 35.196-3.904 46.875-13.75 11.68-9.85 16.05-26.89 9.375-44.595-8.432-22.363-27.576-35.638-48.97-39.532-5.347-.974-10.825-1.407-16.405-1.344zm.22 18.718c4.457-.065 8.76.29 12.842 1.032 16.328 2.972 28.704 11.517 34.813 27.718 4.736 12.56 2.46 18.326-3.938 23.72-6.396 5.392-19.18 9.285-34.906 9.343-24.812.092-55.875-9.065-79.78-26.47 8.326-10.05 18.477-18.082 29.405-24 13.51-7.312 28.19-11.147 41.564-11.343zm-140.69 128.313c6.397.06 13.328.942 20.907 2.78-72.17 14.765-84.3 99.482-165.156 81.782 70.31-9.934 82.423-85.154 144.25-84.562zm34 19.5c52.567 110.048-67.184 156.03-9.967 257.563-84.856-93.86 23.175-138.69 9.968-257.563zm24.908 3.906c42.292 46.343 133.717-11.018 164.093 90-43.937-71.563-131.402-22.378-164.094-90z"></path></symbol></svg>
@@ -65,7 +67,7 @@
 <div id="particles" aria-hidden="true"></div>
 <div id="flutter" aria-hidden="true"></div>
 
-<div id="intro" aria-label="Enter website">
+<div id="intro" role="button" tabindex="0" aria-label="Open the doors and enter the invitation">
   <video src="assets/video/intro.mp4" poster="assets/images/doors.webp" playsinline preload="auto"></video>
   <div class="names">
     <p class="pre" lang="hi" translate="no">शुभ विवाह</p>
@@ -75,7 +77,7 @@
   <div class="hint">Tap To Begin</div>
 </div>
 
-<main style="pointer-events:none;opacity:0">
+<main inert style="pointer-events:none;opacity:0">
   <div class="corner-floral tl out"><img src="assets/images/cornerflowers.webp" alt="" loading="lazy"></div>
   <div class="corner-floral br out"><img src="assets/images/bottomflowers.webp" alt="" loading="lazy"></div>
 
@@ -396,7 +398,7 @@
 
       <a class="map-card reveal" data-stop="venue" style="transform:translateY(24px)" href="https://www.google.com/maps/place/Radisson+Hotel+Delhi+MG+Road/@28.5024229,77.1712251,396m/data=!3m1!1e3!4m9!3m8!1s0x390d1fbabdaaa905:0x3a0a1746aece9727!5m2!4m1!1i2!8m2!3d28.5030278!4d77.1715164!16s%2Fg%2F11xg7dz3l7!5m1!1e1?entry=ttu&g_ep=EgoyMDI2MDkwOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener">
         <div class="brackets b-lg"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1725.4931058421616!2d77.17122510493687!3d28.502422887830583!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390d1fbabdaaa905%3A0x3a0a1746aece9727!2sRadisson%20Hotel%20Delhi%20MG%20Road!5e1!3m2!1sen!2sin!4v1789374602166!5m2!1sen!2sin" width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="Radisson Hotel Delhi MG Road"></iframe>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1725.4931058421616!2d77.17122510493687!3d28.502422887830583!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390d1fbabdaaa905%3A0x3a0a1746aece9727!2sRadisson%20Hotel%20Delhi%20MG%20Road!5e1!3m2!1sen!2sin!4v1789374602166!5m2!1sen!2sin" width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="Radisson Hotel Delhi MG Road" tabindex="-1"></iframe>
         <div class="tint"></div>
         <div class="veil"><span>Get Directions</span></div>
       </a>
@@ -483,6 +485,12 @@
     </div>
   </footer>
 </main>
+
+<!-- After the page in the focus order: the RSVP shortcut, then the music. -->
+<a id="skipRsvp" class="skip-rsvp" href="#rsvp" aria-label="Skip to the RSVP">RSVP <span aria-hidden="true">&darr;</span></a>
+<button id="music" aria-label="Play music" aria-pressed="false" tabindex="-1" style="opacity:0;transform:scale(.85)">
+  <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+</button>
 
 <script src="js/intro.js"></script>
 <script src="js/countdown.js"></script>

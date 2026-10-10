@@ -166,6 +166,7 @@ export function build(W, opts) {
     petals.setMatrixAt(j, mtx.compose(ps.set(p[0], p[1], p[2]), q4.setFromEuler(e3.set(r() * 0.3, r() * 6, r() * 0.3)), sc.set(0.045, 1, 0.027)));
     petals.setColorAt(j, pCols[j % pCols.length]);
   });
+  petals.userData.thin = true;
   group.add(petals);
 
   // ── Assemble ───────────────────────────────────────────────────────────

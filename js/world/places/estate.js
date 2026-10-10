@@ -16,7 +16,7 @@
  * the two never overlap.
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, Garlands, PointSet, pointKit, GLOW_F, HALO_F, broadleaf,
-         treeMesh, groundShade, onionDome } from '../lib.js';
+         treeMesh, groundShade, onionDome , Q, tag } from '../lib.js';
 import { tinted, merge } from '../../immersive/kit.js';
 import { keyed, cols } from '../timeline.js';
 import { COURT_DAWN, HOMES, TERRACE, STORY, HALDI, BARAAT, HALL, PAVILION, PIN, groundH } from '../land.js';
@@ -186,7 +186,7 @@ export function build(W) {
     if (bad || Math.abs(x) < 3) continue;
     treeSpots.push([x, groundH(x, z) - 0.2, z, 0.9 + r() * 0.8, r() * 6, leafCols[(r() * 4) | 0], 0.9 + r() * 0.3]);
   }
-  var treeGeo = merge([tinted(new THREE.CylinderGeometry(0.15, 0.25, 3.2, 4).translate(0, 1.6, 0), '#4a3424'),
+  var treeGeo = merge([tinted(new THREE.CylinderGeometry(0.15, 0.25, 3.2, small ? 3 : 4, 1, small).translate(0, 1.6, 0), '#4a3424'),
                        tinted(new THREE.IcosahedronGeometry(2.2, 0).scale(1, 0.85, 1).translate(0, 4.6, 0), '#4c6e30')]);
   // And the countryside's own trees, scattered over the fields and in rows
   // along their edges (they give the land texture from the air).
@@ -200,14 +200,18 @@ export function build(W) {
   }
   // Mango orchards and hedgerows round the pavilion's garden, so its
   // surroundings read from the air (and from the climb into the dawn).
+  var orchard = [];   // its own mesh: kept whole at every tier (the climb into the dawn passes over it)
   [[-1, 1], [1, 1], [-1, -1], [1, -1]].forEach(function (q) {
     for (var ox = 26; ox < 74; ox += small ? 7.5 : 6) for (var oz = 0; oz < 66; oz += small ? 7.5 : 6) {
       if (r() < 0.25) continue;
       var tx = q[0] * ox + (r() - 0.5) * 1.5, tz = PAVILION.z + 8 - oz * (q[1] > 0 ? 1 : -1) * 0 - oz + (r() - 0.5) * 1.5;
       if (q[1] < 0) tz = PAVILION.z - 60 - oz * 0.6;
-      treeSpots.push([tx, groundH(tx, tz) - 0.2, tz, 0.7 + r() * 0.35, r() * 6, leafCols[(r() * 4) | 0], 0.9]);
+      orchard.push([tx, groundH(tx, tz) - 0.2, tz, 0.7 + r() * 0.35, r() * 6, leafCols[(r() * 4) | 0], 0.9]);
     }
   });
+  var orchardMesh = treeMesh(treeGeo, orchard);
+  orchardMesh.userData.thin = false;
+  group.add(orchardMesh);
   var trees = treeMesh(treeGeo, treeSpots);
   group.add(trees);
 
@@ -225,11 +229,12 @@ export function build(W) {
     var steps = Math.hypot(bx - ax, bz - az) / 6;
     for (var s2 = 0; s2 < steps; s2++) { var lx = lerp(ax, bx, s2 / steps), lz = lerp(az, bz, s2 / steps); vill.add(lx, groundH(lx, lz) + 0.6, lz, 0, r(), 0, 0.55, cWarm[1]); }
   }
-  pk.add(vill, 'vec4 place(){ return vec4(position, uMap * (0.65 + 0.35 * sin(uTime * 0.7 + aData.y * 30.0))); }\n', [[GLOW_F, 2.4, 2.2, 2]]);
+  tag(pk.add(vill, 'vec4 place(){ return vec4(position, uMap * (0.65 + 0.35 * sin(uTime * 0.7 + aData.y * 30.0))); }\n', [[GLOW_F, 2.4, 2.2, 2]]), 'pts');
   // The map's surface: deep indigo fields ruled in faint gold, a river and
   // lanes, laid over the land while the map shows (no names, no streets).
-  var mc = document.createElement('canvas'); mc.width = mc.height = 1024;
+  var MS = small ? 512 : 1024, mc = document.createElement('canvas'); mc.width = mc.height = MS;
   var mx = mc.getContext('2d'), mr = rng(66);
+  mx.scale(MS / 1024, MS / 1024);
   mx.fillStyle = '#140d2a'; mx.fillRect(0, 0, 1024, 1024);
   for (var cy = 0; cy < 1024; cy += 46) for (var cx = 0; cx < 1024; cx += 58) {
     var sh = 20 + mr() * 30;
@@ -245,7 +250,7 @@ export function build(W) {
   for (var ln = 0; ln < 7; ln++) { mx.beginPath(); var y0 = mr() * 1024; mx.moveTo(0, y0); mx.bezierCurveTo(300, y0 + (mr() - 0.5) * 400, 700, y0 + (mr() - 0.5) * 400, 1024, y0 + (mr() - 0.5) * 300); mx.stroke(); }
   var mapTex = new THREE.CanvasTexture(mc); mapTex.colorSpace = THREE.SRGBColorSpace; mapTex.anisotropy = 4;
   var mapMat = new THREE.MeshBasicMaterial({ map: mapTex, transparent: true, opacity: 0, depthWrite: false, fog: false });
-  var mpg = new THREE.PlaneGeometry(460, 460, 92, 92).rotateX(-Math.PI / 2).translate(0, 0, -70), mpp = mpg.attributes.position;
+  var mpg = new THREE.PlaneGeometry(460, 460, small ? 46 : 92, small ? 46 : 92).rotateX(-Math.PI / 2).translate(0, 0, -70), mpp = mpg.attributes.position;
   for (var mi = 0; mi < mpp.count; mi++) mpp.setY(mi, groundH(mpp.getX(mi), mpp.getZ(mi)) + 0.35);   // lie on the land
   var mapPlane = new THREE.Mesh(mpg, mapMat);
   mapPlane.renderOrder = -1;
@@ -258,7 +263,7 @@ export function build(W) {
     var cx2 = PIN.x + Math.cos(a2) * rr * 1.3, cz2 = PIN.z + Math.sin(a2) * rr;
     city.add(cx2, groundH(cx2, cz2) + 0.9, cz2, 0, r(), 0, 0.8 + r() * 0.9, k % 5 ? cWarm[(r() * 4) | 0] : col('#fff0e0'));
   }
-  pk.add(city, 'vec4 place(){ return vec4(position, uMap * (0.6 + 0.3 * sin(uTime * 1.1 + aData.y * 40.0))); }\n', [[GLOW_F, 2.6, 2.2, 2]]);
+  tag(pk.add(city, 'vec4 place(){ return vec4(position, uMap * (0.6 + 0.3 * sin(uTime * 1.1 + aData.y * 40.0))); }\n', [[GLOW_F, 2.6, 2.2, 2]]), 'pts');
   // The route: from the Baraat avenue's start, east across the fields to the pin.
   var curve = new THREE.CatmullRomCurve3([[0, BARAAT.z + 6], [18, BARAAT.z + 10], [38, BARAAT.z - 2], [56, BARAAT.z - 10], [72, BARAAT.z - 30], [90, PIN.z + 4], [PIN.x, PIN.z]]
     .map(function (p) { return new THREE.Vector3(p[0], 0.9, p[1]); }), false, 'centripetal');
@@ -293,8 +298,8 @@ export function build(W) {
   // Mist lying in the fields at dawn: soft low veils.
   var mist = new PointSet();
   for (k = 0; k < (small ? 26 : 40); k++) mist.add((r() - 0.5) * 140, 1.5 + r() * 2, 120 - r() * 380, 0, r(), 0, 0.8 + r() * 0.6, col('#fff0e0'));
-  pk.add(mist, 'vec4 place(){ return vec4(position + vec3(sin(uTime * 0.05 + aData.y * 9.0) * 4.0, 0.0, 0.0), 0.22 * (1.0 - uNight) * (1.0 - uMap)); }\n',
-    [[HALO_F, 22, 4, 1]]);
+  tag(pk.add(mist, 'vec4 place(){ return vec4(position + vec3(sin(uTime * 0.05 + aData.y * 9.0) * 4.0, 0.0, 0.0), 0.22 * (1.0 - uNight) * (1.0 - uMap)); }\n',
+    [[HALO_F, 22, 4, 1]]), 'lowSkip');
 
   var REAL = { court: ['dawn', 'gate'], homes: ['homes'], terrace: ['terrace'], story: ['story'], haldi: ['haldi'], baraat: ['baraat'], hall: ['hall'], pavilion: ['pavilion'] };
   function realShown(names) {

@@ -21,15 +21,41 @@
  * unmount?() }. A stop is { name, places: [names], pose(local, out),
  * local?(y, vh), range?(vh), arc?, mist? } (see timeline.js).
  */
-import { THREE, clamp, lerp, smooth, rng, col, mq, PointSet, pointKit, PETAL_F, GLOW_F } from './lib.js';
+import { THREE, clamp, lerp, smooth, rng, col, mq, PointSet, pointKit, PETAL_F, GLOW_F, Q } from './lib.js';
 import { createSky } from './sky.js';
 import { buildLand } from './land.js';
 import { createTimeline } from './timeline.js';
 
-var NLIGHTS = 6;
+// ── Quality tiers ────────────────────────────────────────────────────────
+// high: the default, on phones as well as desktops. medium: clearly weak
+// devices. low: any device the fps probe finds still struggling. Places are built at the starting
+// tier (lib.js Q); if the probe drops the tier later, the engine thins what
+// the places tagged (lib.js tag()) and lowers the pixel ratio, without a
+// rebuild. ?tier=low|medium|high forces a tier (for testing).
+var TIERS = ['high', 'medium', 'low'];
+var TIER = {
+  high:   { dpr: 1.5,  lights: 6, density: 1,    rays: 1, far: 260 },
+  medium: { dpr: 1.25, lights: 4, density: 0.6,  rays: 1, far: 200 },
+  low:    { dpr: 1.0,  lights: 3, density: 0.33, rays: 0, far: 150 }
+};
+function pickTier(K, gl) {
+  var forced = (location.search.match(/[?&]tier=(low|medium|high)\b/) || [])[1];
+  if (forced) return { tier: forced, why: 'url' };
+  var small = K.isSmall(), cores = navigator.hardwareConcurrency || 0, mem = navigator.deviceMemory || 0, gpu = '';
+  try {
+    var c = gl.getContext(), ext = c.getExtension('WEBGL_debug_renderer_info');
+    gpu = String(ext ? c.getParameter(ext.UNMASKED_RENDERER_WEBGL) : c.getParameter(c.RENDERER) || '');
+  } catch (e) {}
+  // Old or entry-level mobile GPUs, and old integrated laptop graphics.
+  var weak = /Mali-(4|T[678])|Mali-G(31|51|52|57)\b|Adreno \(TM\) (3|4|50|51|52|60[0-9])\d?\b|PowerVR|Intel.*HD Graphics (2|3|4|5)\d{3}|GMA/i.test(gpu);
+  var why = 'screen ' + (small ? 'small' : 'large') + ', cores ' + (cores || '?') + ', memory ' + (mem || '?') + ', gpu ' + (gpu || '?');
+  // Phones start at high too, like desktops: only clearly weak devices start
+  // lower, and the fps probe steps down any device that struggles.
+  return { tier: (weak || (mem && mem <= 2) || (cores && cores <= 2)) ? 'medium' : 'high', why: why };
+}
 
 export function createWorld(K, opts) {
-  var small = K.isSmall(), reduce = !!opts.reduceMotion;
+  var reduce = !!opts.reduceMotion;
   var root = document.documentElement, body = document.body;
   var canvas = document.createElement('canvas');
   canvas.className = 'world-canvas';
@@ -41,6 +67,10 @@ export function createWorld(K, opts) {
   body.insertBefore(fade, canvas.nextSibling);
 
   var gl = K.makeRenderer(canvas, { clear: '#1a1020', exposure: 1.0 });
+  var picked = pickTier(K, gl), tier = picked.tier, buildTier = tier, tierLog = [{ t: 0, tier: tier, why: picked.why }];
+  // Places are built at the starting tier: medium and low build the phone counts.
+  Q.tier = tier; Q.small = tier !== 'high'; Q.low = tier === 'low';
+  var small = Q.small, NLIGHTS = TIER[tier].lights;
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1500);
   var sky = createSky(K, scene, small);
@@ -127,6 +157,10 @@ export function createWorld(K, opts) {
       [[GLOW_F, 0.09, 1.6, 2, false, 0.8]]);
   })();
 
+  travelGroup.children.forEach(function (c) { c.userData.pts = true; });
+  ambient.children.forEach(function (c) { c.userData.pts = true; });
+  root.dataset.worldTier = tier;
+
   // ── Places ─────────────────────────────────────────────────────────────
   var places = {};          // name -> { loader, state, place }
   function define(name, loader) { places[name] = { loader: loader, state: 'idle', place: null }; }
@@ -138,10 +172,11 @@ export function createWorld(K, opts) {
       if (dead) return null;
       e.place = p; e.state = 'built';
       p.group.visible = false;
+      applyTier(p);
       scene.add(p.group);
       if (p.resize) p.resize(vw, vh, vw / vh);
       // Compile its shaders now, off the critical path, so it never hitches on arrival.
-      try { if (gl.compileAsync) gl.compileAsync(p.group, camera, scene).catch(function () {}); } catch (x) {}
+      try { if (gl.compileAsync && gl.extensions.has('KHR_parallel_shader_compile')) gl.compileAsync(p.group, camera, scene).catch(function () {}); } catch (x) {}
       dirtyMeasure = true; poke();
       return p;
     }).catch(function (err) { e.state = 'failed'; console.warn('[world] a place could not be built:', name, err); return null; });
@@ -169,7 +204,7 @@ export function createWorld(K, opts) {
   var sizedW = 0, sizedH = 0, sizedR = 0;
   function resize() {
     var w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
-    var ratio = Math.min(window.devicePixelRatio || 1, small ? 1.25 : 1.5);
+    var ratio = Math.min(window.devicePixelRatio || 1, TIER[tier].dpr);
     vw = w; vh = window.innerHeight || h;
     dirtyMeasure = true; poke();
     // The canvas is sized to the large viewport, so a phone's URL bar coming
@@ -240,8 +275,102 @@ export function createWorld(K, opts) {
     // motion, only when something changed.
     var idle = now - lastInput > 4000 && !override;
     frameNo++;
-    if (reduce ? !need : (idle && frameNo % 2)) return;
+    var skip = reduce ? !need : (idle && frameNo % 2);
+    // The probe samples the interval between frames that both drew.
+    if (!skip && drewPrev && !document.hidden) sample(now - prevNow);
+    drewPrev = !skip; prevNow = now;
+    if (skip) return;
+    stats.drawn++;
     try { draw(dt * (idle ? 2 : 1)); } catch (err) { fail(err); }
+  }
+
+  // ── The fps probe ──────────────────────────────────────────────────────
+  // About 2 s after the doors open, the median frame time decides: under
+  // ~45 fps, drop a tier. After that it keeps a light watch: a sustained
+  // median under ~30 fps (two checks of ~3 s running) drops again. Never
+  // back up within a visit (no oscillation). Off with reduced motion
+  // (frames are drawn only on change, so their timing means nothing).
+  var drewPrev = false, prevNow = 0, probe = { phase: 'wait', buf: [], t0: 0, slow: 0 };
+  var stats = { drawn: 0 };
+  function median(a) { var b = a.slice().sort(function (x, y) { return x - y; }); return b[b.length >> 1] || 0; }
+  function sample(ms) {
+    if (reduce || probe.phase === 'wait' || dead) return;
+    if (ms > 400) return;                         // a stall (tab switch, GC), not the frame rate
+    probe.buf.push(ms);
+    var now = performance.now();
+    if (probe.phase === 'first' && now - probe.t0 > 2000 && probe.buf.length >= 8) {
+      var fps = 1000 / median(probe.buf);
+      tierLog.push({ t: Math.round(now), check: 'first', fps: Math.round(fps), tier: tier });
+      if (fps < 45) dropTier(fps);
+      probe.phase = 'watch'; probe.buf = []; probe.t0 = now;
+    } else if (probe.phase === 'watch' && now - probe.t0 > 3000) {
+      if (probe.buf.length >= 8) {
+        var fps2 = 1000 / median(probe.buf);
+        probe.slow = fps2 < 30 ? probe.slow + 1 : 0;
+        if (tierLog.length < 60) tierLog.push({ t: Math.round(now), check: 'watch', fps: Math.round(fps2), tier: tier });
+        if (probe.slow >= 2) { dropTier(fps2); probe.slow = 0; }
+      }
+      probe.buf = []; probe.t0 = now;
+    }
+  }
+  function startProbe() { if (probe.phase === 'wait') { probe.phase = 'first'; probe.buf = []; probe.t0 = performance.now(); poke(); } }
+
+  // ── Tier changes ───────────────────────────────────────────────────────
+  // A drop waits for a travel (the camera is moving, the petals are
+  // drifting) for up to 3 s; otherwise it happens on the hold under a
+  // brief, gentle dim.
+  var pendingTier = null, pendingSince = 0, dimT = -1;
+  function dropTier(fps) {
+    var i = TIERS.indexOf(pendingTier || tier);
+    if (i >= TIERS.length - 1) return;
+    pendingTier = TIERS[i + 1]; pendingSince = performance.now();
+    tierLog.push({ t: Math.round(pendingSince), drop: pendingTier, fps: Math.round(fps) });
+  }
+  function maybeApplyTier(now) {
+    if (!pendingTier) return;
+    var travelling = f.travel > 0.35;
+    if (travelling) { setTier(pendingTier); pendingTier = null; return; }
+    if (now - pendingSince > 3000 && dimT < 0) dimT = now;
+    if (dimT >= 0 && now - dimT > 220) { setTier(pendingTier); pendingTier = null; }
+  }
+  function dimAmount(now) {
+    if (dimT < 0) return 0;
+    var t = (now - dimT) / 1000;
+    if (t > 0.75) { dimT = -1; return 0; }
+    return 0.32 * (t < 0.22 ? t / 0.22 : 1 - (t - 0.22) / 0.53);
+  }
+  function setTier(t) {
+    tier = t;
+    tierLog.push({ t: Math.round(performance.now()), applied: t });
+    sizedR = 0; resize();
+    for (var n in places) if (places[n].place) applyTier(places[n].place);
+    applyTier({ group: travelGroup }); applyTier({ group: ambient });
+    root.dataset.worldTier = t;
+  }
+  // Thin a built group to the current tier: tagged instanced meshes keep
+  // an even spread of their instances, tagged point fields draw fewer points,
+  // low drops the decorative layers tagged lowSkip.
+  function applyTier(p) {
+    // Medium and low are built with the phone counts (medium's density); high with the desktop's.
+    var k = TIER[tier].density / TIER[buildTier === 'high' ? 'high' : 'medium'].density, low = tier === 'low';
+    p.group.traverse(function (o) {
+      var u = o.userData;
+      if (o.isInstancedMesh && u.thin) {
+        if (!u.n0) { u.n0 = o.count; u.m0 = o.instanceMatrix.array.slice(0, o.count * 16); u.c0 = o.instanceColor ? o.instanceColor.array.slice(0, o.count * 3) : null; }
+        var keep = Math.max(1, Math.round(u.n0 * Math.min(1, k))), m = o.instanceMatrix.array, c = o.instanceColor && o.instanceColor.array;
+        for (var j = 0; j < keep; j++) {
+          var src = Math.floor(j * u.n0 / keep);
+          for (var q = 0; q < 16; q++) m[j * 16 + q] = u.m0[src * 16 + q];
+          if (c) for (q = 0; q < 3; q++) c[j * 3 + q] = u.c0[src * 3 + q];
+        }
+        o.count = keep; o.instanceMatrix.needsUpdate = true; if (c) o.instanceColor.needsUpdate = true;
+      }
+      if (o.isPoints && u.pts) {
+        var n = o.geometry.attributes.position.count;
+        o.geometry.setDrawRange(0, Math.max(1, Math.round(n * Math.min(1, k))));
+      }
+      if (u.lowSkip) o.visible = !low;
+    });
   }
 
   function draw(dt) {
@@ -268,6 +397,12 @@ export function createWorld(K, opts) {
     if (seg.a) mark(seg.a.places);
     if (seg.b) mark(seg.b.places);
     if (override && override.places) mark(override.places);
+    // Wanted now: the places where the page really is (a fling outruns the
+    // smoothed camera), built at once rather than when the browser is idle.
+    timeline.locate(y, vh, segY);
+    for (var wn in wanted) wanted[wn] = false;
+    if (segY.a) markWanted(segY.a.places);
+    if (segY.b) markWanted(segY.b.places);
     // Build ahead: the places of the stop we are at (or leaving), the one we
     // are heading to, and the one after (never while the gate opens).
     var ix = timeline.stops.indexOf(seg.a);
@@ -289,7 +424,7 @@ export function createWorld(K, opts) {
       if (pose.e < 0.5) sky.blend(pose.tod, pose.thr, smooth(0.04, 0.42, pose.e));
       else sky.blend(pose.thr, pose.tod2, smooth(0.6, 0.97, pose.e));
     } else sky.blend(pose.tod, pose.tod2, pose.e);
-    sky.P.rays = override ? 0 : raysK;
+    sky.P.rays = override ? 0 : raysK * TIER[tier].rays;
     f.tod = sky.P.tod;
     sky.P.fd *= Math.max(0.15, 1 + pose.mist);
     if (hazeK > 0 && !override) {
@@ -305,10 +440,14 @@ export function createWorld(K, opts) {
     f.pxScale = pxScale;
     f.slow = 1;
     nreq = 0;
+    var nowMs = performance.now();
+    maybeApplyTier(nowMs);
     for (var name in places) {
       var e = places[name], p = e.place;
       if (!p) continue;
       var show = !!visibleNow[name];
+      // A place with a stand-in (estate.js) and a centre hides once it is far.
+      if (show && p.centre && camera.position.distanceTo(p.centre) > (p.far || TIER[tier].far)) show = false;
       if (p.group.visible !== show) p.group.visible = show;
       if (!show) continue;
       f.u = p.stop === seg.a ? seg.la : p.stop === seg.b ? seg.lb : 0;
@@ -332,6 +471,7 @@ export function createWorld(K, opts) {
     // The fade that stands in for travel when motion is reduced.
     var fo = reduce && seg.b ? 1 - smooth(0.08, 0.22, Math.abs(seg.t - 0.5)) : 0;
     if (override && override.fade != null) fo = Math.max(fo, override.fade);
+    fo = Math.max(fo, dimAmount(nowMs));
     setFade(fo);
     // The page's ink follows the hour: dark ink on light glass by day, cream
     // ink on plum glass at night (stepped, so styles change rarely).
@@ -354,6 +494,8 @@ export function createWorld(K, opts) {
     s.setProperty('--world-card-strong', 'rgba(' + m(253, 34) + ',' + m(246, 15) + ',' + m(232, 32) + ',' + lerp(0.86, 0.88, k).toFixed(2) + ')');
     s.setProperty('--world-halo', 'rgba(' + m(255, 22) + ',' + m(248, 8) + ',' + m(234, 20) + ',' + lerp(0.9, 0.8, k).toFixed(2) + ')');
   }
+  var wanted = {}, segY = { a: null, b: null, t: 0, la: 0, lb: 0 };
+  function markWanted(list) { for (var i = 0; i < list.length; i++) { wanted[list[i]] = true; if (places[list[i]] && places[list[i]].state === 'idle') ensure(list[i]); } }
   function mark(list) { for (var i = 0; i < list.length; i++) visibleNow[list[i]] = true; }
 
   var fadeNow = -1;
@@ -451,6 +593,10 @@ export function createWorld(K, opts) {
     start: function () { resize(); run(!document.hidden); },
     render: function () { try { draw(0); } catch (err) { fail(err); } },
     onFail: function (h) { failHooks.push(h); },
+    tier: function () { return tier; }, tierLog: tierLog, stats: stats, startProbe: startProbe,
+    forceDrop: function () { dropTier(0); },
+    // A place the camera is at (by the real scroll position, ahead of the smoothed one) is wanted now.
+    wants: function (name) { return !!wanted[name]; },
     fail: fail,
     dead: function () { return dead; }
   };

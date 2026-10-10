@@ -49,6 +49,17 @@ function splitInvitation(on) {
     });
   }
 }
+// Build when the browser is idle, or at once if the camera already needs it.
+var worldRef = null;
+function idleFor(name) {
+  return new Promise(function (res) {
+    if (worldRef && worldRef.wants(name)) return res();
+    var done = false, go = function () { if (!done) { done = true; res(); } };
+    if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 1500 }); else setTimeout(go, 80);
+    // Check again every frame: a fling may want it before the browser is idle.
+    (function poll() { if (done) return; if (worldRef && worldRef.wants(name)) go(); else requestAnimationFrame(poll); })();
+  });
+}
 function idle(timeout) {
   return new Promise(function (res) {
     if (window.requestIdleCallback) window.requestIdleCallback(function () { res(); }, { timeout: timeout || 1500 });
@@ -126,10 +137,13 @@ function start() {
     if (gaveUp) return null;
     var K = m[0], E = m[1], L = m[2], Gate = m[3], Court = m[4], Shrine = m[5];
     W = E.createWorld(K, { reduceMotion: reduceMotion });
+    worldRef = W;
     W.onFail(function (err) { giveUp(err, true); });
     // The stops, in page order (the story adds its own once it mounts).
     var shrine = W.timeline.add({ name: 'shrine', places: ['gate', 'dawn', 'shrine'], pose: Shrine.shrinePose(L.COURT_DAWN) });
-    var homes = W.timeline.add({ name: 'homes', places: ['homes', 'terrace'], arc: 9, tilt: -0.15, mist: 0.1, span: function () { return homesSpan(); },
+    // Up over the shrine's lamp towers (not past them), then down the lane.
+    var homes = W.timeline.add({ name: 'homes', places: ['homes', 'terrace'], mist: 0.1,
+                                 via: function (f, P, T) { var tall = f.aspect < 0.9; P.set(tall ? 9 : 15, tall ? 15 : 19, 98); T.set(tall ? -2 : -6, 6, 62); }, span: function () { return homesSpan(); },
                                  pose: function (u, out, f) { homesPose(u, out, f); } });
     var terrace = W.timeline.add({ name: 'terrace', places: ['terrace', 'story'], arc: 8, tilt: 0.15, span: [0.25, 0.5],
                                    pose: function (u, out, f) { terracePose(u, out, f); } });
@@ -162,25 +176,25 @@ function start() {
     W.define('dawn', function () { var p = Court.build(W, { variant: 'dawn', origin: L.COURT_DAWN }); p.stop = shrine; return p; });
     W.define('shrine', function () { var p = Shrine.build(W, { origin: L.COURT_DAWN }); p.stop = shrine; return p; });
     // Later places load their own code, and build when the browser is idle.
-    W.define('homes', function () { return homesMod.then(function (H) { return idle(1500).then(function () { var p = H.build(W); p.stop = homes; return p; }); }); });
-    W.define('terrace', function () { return terraceMod.then(function (T) { return idle(1500).then(function () { var p = T.build(W); p.stop = terrace; return p; }); }); });
+    W.define('homes', function () { return homesMod.then(function (H) { return idleFor('homes').then(function () { var p = H.build(W); p.stop = homes; return p; }); }); });
+    W.define('terrace', function () { return terraceMod.then(function (T) { return idleFor('terrace').then(function () { var p = T.build(W); p.stop = terrace; return p; }); }); });
     W.define('estate', function () {
       return import('./places/estate.js').then(function (E2) {
         closePoses.map = E2.mapPose; closePoses.dawn = E2.dawnPose;
-        return idle(1500).then(function () { var p = E2.build(W); p.stop = venue; return p; });
+        return idleFor('estate').then(function () { var p = E2.build(W); p.stop = venue; return p; });
       });
     });
     W.define('pavilion', function () {
       return import('./places/pavilion.js').then(function (P2) {
         closePoses.pavilion = P2.pose;
-        return idle(1500).then(function () { var p = P2.build(W); p.stop = rsvp; return p; });
+        return idleFor('pavilion').then(function () { var p = P2.build(W); p.stop = rsvp; return p; });
       });
     });
     [['haldi', haldi], ['baraat', baraat], ['hall', hall]].forEach(function (d) {
       W.define(d[0], function () {
         return import('./places/' + d[0] + '.js').then(function (P) {
           celebPoses[d[0]] = P.pose;
-          return idle(1500).then(function () { var p = P.build(W); p.stop = d[1]; return p; });
+          return idleFor(d[0]).then(function () { var p = P.build(W); p.stop = d[1]; return p; });
         });
       });
     });
@@ -229,6 +243,13 @@ function start() {
   function afterDoors() {
     var sh = W && W.place('shrine');
     if (sh) sh.arrive();
+    // Measure the frame rate as the guest settles in (it may drop a tier).
+    setTimeout(function () { if (W && !W.dead()) W.startProbe(); }, 600);
+    // Fetch the rest of the places' code while the guest reads (small, cached),
+    // so a fast fling to the end never waits on the network.
+    setTimeout(function () {
+      ['haldi', 'baraat', 'hall', 'estate', 'pavilion'].forEach(function (n) { import('./places/' + n + '.js').catch(function () {}); });
+    }, 2500);
     // Mount the story once the page has faded in; its scene builds when idle.
     setTimeout(function () {
       if (!W || W.dead()) return;

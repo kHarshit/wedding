@@ -16,7 +16,7 @@
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, notchShape, shiftPts, swag, groundShade,
          Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, PETAL_F, diyaBowls, worldUV, stoneTexture, onionDome,
-         rangoliTexture, rangoli, broadleaf, treeMesh } from '../lib.js';
+         rangoliTexture, rangoli, broadleaf, treeMesh , Q, tag } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { keyed, cols } from '../timeline.js';
 import { HALDI } from '../land.js';
@@ -275,6 +275,7 @@ export function build(W) {
     petals.setMatrixAt(j, mtx.compose(ps.set(p[0], p[1], p[2]), q4.setFromEuler(e3.set(r() * 0.3, r() * 6, r() * 0.3)), sc.set(0.05, 1, 0.03)));
     petals.setColorAt(j, pCols[j % pCols.length]);
   });
+  petals.userData.thin = true;
   group.add(petals);
   // Brass urlis of water and flowers along the side arcades, and tulsi planters.
   [[-HALF + 2.0, -6], [-HALF + 2.0, -22], [HALF - 2.0, -6], [HALF - 2.0, -22]].forEach(function (u2, i) {
@@ -339,19 +340,19 @@ export function build(W) {
   // Motes of turmeric in the air, catching the light.
   var motes = new PointSet();
   for (k = 0; k < (small ? 160 : 280); k++) motes.add((r() - 0.5) * HALF * 1.8, 0.4 + r() * 6, -1 - r() * (DEPTH - 2), 0, r(), 0, 0.6 + r() * 0.6, col(k % 3 ? '#ffd870' : '#fff0c0'));
-  pk.add(motes,
+  tag(pk.add(motes,
     'vec4 place(){ float s = aData.y;\n' +
     ' vec3 p = position + vec3(sin(uTime * 0.13 + s * 30.0) * 0.6, sin(uTime * 0.2 + s * 17.0) * 0.25, cos(uTime * 0.11 + s * 23.0) * 0.6);\n' +
     ' return vec4(p, 0.35 * (0.6 + 0.4 * sin(uTime * 0.9 + s * 40.0))); }\n',
-    [[GLOW_F, 0.05, 1.2, 3, false, 1.0]]);
+    [[GLOW_F, 0.05, 1.2, 3, false, 1.0]]), 'pts');
   // Petals drifting down through the court.
   var air = new PointSet(), aCols = ['#ff8c00', '#ffb21a', '#ffd04a', '#e8590c', '#fff0d8', '#c21e3a'].map(col);
   for (k = 0; k < (small ? 90 : 160); k++) air.add((r() - 0.5) * HALF * 1.8, r() * 7, -1 - r() * (DEPTH - 2), 0, r(), 0, 0.8 + r() * 0.5, aCols[k % aCols.length]);
-  pk.add(air,
+  tag(pk.add(air,
     'vec4 place(){ vec3 B = vec3(' + (HALF * 1.8).toFixed(1) + ', 7.0, ' + (DEPTH - 2).toFixed(1) + '), O = vec3(' + (-HALF * 0.9).toFixed(1) + ', 0.0, ' + (-DEPTH + 1).toFixed(1) + '); float s = aData.y;\n' +
     ' vec3 p = position + vec3(uTime * 0.25 + sin(uTime * 0.7 + s * 20.0) * 0.5, -uTime * (0.2 + s * 0.22), sin(uTime * 0.45 + s * 9.0) * 0.5);\n' +
     ' p = O + mod(p - O, B); vCol = aCol * uLit; return vec4(p, 0.95); }\n',
-    [[PETAL_F, 0.12, 1.4, 7, true, 1.4]]);
+    [[PETAL_F, 0.12, 1.4, 7, true, 1.4]]), 'pts');
 
   var turmeric = col('#ffd56a'), warm = col('#fff0c8');
   function frame(f) {

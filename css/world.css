@@ -272,3 +272,4 @@ html:has(body.world-on){transition:--world-ink .4s ease,--world-ink-soft .4s eas
 .world-on footer .f-sub,.world-on .credit,.world-on .social a{color:var(--ink-mid);opacity:1}
 .world-on .credit a,.world-on .credit b{color:var(--ink-gold);font-weight:600}
 .world-on .social a svg{stroke:var(--ink-gold)}
+.world-on #particles{display:none}

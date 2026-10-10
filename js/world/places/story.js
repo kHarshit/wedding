@@ -31,7 +31,7 @@
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, swag, groundShade, Garlands, PointSet, pointKit,
          GLOW_F, HALO_F, FLAME_F, PETAL_F, LANTERN_F, haveli, HAVELI_PAL, broadleaf, ashoka, diyaGeometry,
-         rangoliTexture, pool } from '../lib.js';
+         rangoliTexture, pool, Q, tag } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { keyed, cols } from '../timeline.js';
 import { STORY, groundH } from '../land.js';
@@ -136,9 +136,9 @@ function createScene(W) {
   var hA = haveli(ctx, HOME_A, HAVELI_PAL[0], 0), hB = haveli(ctx, HOME_B, HAVELI_PAL[1], 1);
   homeLamp.push(hA.lamp, hB.lamp);
   var houseMat = new THREE.MeshLambertMaterial({ vertexColors: true });
-  [hA.geo, hB.geo].forEach(function (g) { group.add(new THREE.Mesh(g, houseMat)); });
+  group.add(new THREE.Mesh(merge([hA.geo, hB.geo]), houseMat));
   var glowMat = new THREE.MeshBasicMaterial({ vertexColors: true, color: '#ffffff', fog: true });
-  [hA.glow, hB.glow].forEach(function (g) { group.add(new THREE.Mesh(g, glowMat)); });
+  group.add(new THREE.Mesh(merge([hA.glow, hB.glow]), glowMat));
 
   // ── Rangoli at each door and the mandap ───────────────────────────────
   var rangoliMat = new THREE.MeshLambertMaterial({ map: rangoliTexture(), transparent: true, depthWrite: false, emissive: '#2a0c04' });
@@ -200,7 +200,8 @@ function createScene(W) {
       parts.push(tinted(new THREE.ConeGeometry(0.035, 0.24, 4).rotateZ(-1.15).translate(0.12, 0.42, 0).rotateY(a), leafGreen));
     }
     var g = merge(parts), mat = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: '#3a2206' });
-    kalashAt.forEach(function (p) { var m = new THREE.Mesh(g, mat); m.position.set(p[0], p[1], p[2]); m.scale.setScalar(1.25); group.add(m); });
+    group.add(new THREE.Mesh(merge(kalashAt.map(function (p) { return g.clone().scale(1.25, 1.25, 1.25).translate(p[0], p[1], p[2]); })), mat));
+    g.dispose();
   })();
 
   // The canopy: a peaked tent of maroon and saffron panels.
@@ -266,7 +267,7 @@ function createScene(W) {
       g.computeVertexNormals();
       geos.push(g);
     });
-    geos.forEach(function (g) { group.add(new THREE.Mesh(g, fabricMat)); });
+    group.add(new THREE.Mesh(merge(geos.map(function (g) { return tinted(g, '#ffffff'); })), fabricMat));
   })();
 
   // Fairy lights on the mandap: along the beams and up the tent's ridges.
@@ -303,7 +304,7 @@ function createScene(W) {
   // ── The marigold field ────────────────────────────────────────────────
   // Rows running away towards the mandap, a clear earthen aisle down the middle.
   var bushSpots = [];
-  var xStep = small ? 0.82 : 0.6, zStep = small ? 0.42 : 0.3;
+  var xStep = Q.low ? 1.02 : small ? 0.82 : 0.6, zStep = Q.low ? 0.52 : small ? 0.42 : 0.3;   // low: bigger, fewer bushes
   for (var fx2 = -11; fx2 <= 11.01; fx2 += xStep) {
     if (Math.abs(fx2) < 1.5) continue;
     // Phones pull the camera back to fit both houses, so their field runs
@@ -316,18 +317,19 @@ function createScene(W) {
     }
   }
   // Phones get a lighter shape for the thousands of blooms (20 faces, not 36).
-  var bushes = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ color: '#ffffff' }), bushSpots.length);
-  var flowers = new THREE.InstancedMesh(small ? new THREE.IcosahedronGeometry(1, 0) : new THREE.DodecahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ color: '#ffffff', emissive: '#3a1400' }), bushSpots.length * 3);
+  // Phones: eight-faced bushes and blooms (a dozen pixels each; the colours carry them).
+  var bushes = new THREE.InstancedMesh(small ? new THREE.OctahedronGeometry(1, 0) : new THREE.IcosahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ color: '#ffffff' }), bushSpots.length);
+  var flowers = new THREE.InstancedMesh(small ? new THREE.OctahedronGeometry(1, 0) : new THREE.DodecahedronGeometry(1, 0), new THREE.MeshLambertMaterial({ color: '#ffffff', emissive: '#3a1400' }), bushSpots.length * 3);
   var mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), sc = new V(), ps = new V(), eul = new THREE.Euler();
   var greens = ['#2f4a1e', '#365222', '#3c5a26', '#2a4219'].map(col), nf = 0;
   bushSpots.forEach(function (s, k) {
     var h = 0.34 + r() * 0.14;
-    ps.set(s[0], h * 0.55, s[1]); q4.setFromEuler(eul.set(r() * 0.4, r() * 6, r() * 0.4)); sc.set(0.3 + r() * 0.08, h * 0.75, 0.3 + r() * 0.08);
+    ps.set(s[0], h * 0.55, s[1]); q4.setFromEuler(eul.set(r() * 0.4, r() * 6, r() * 0.4)); var bs2 = Q.low ? 1.2 : 1; sc.set((0.3 + r() * 0.08) * bs2, h * 0.75, (0.3 + r() * 0.08) * bs2);
     bushes.setMatrixAt(k, mtx.compose(ps, q4, sc));
     bushes.setColorAt(k, greens[k % 4]);
-    var nfl = 1 + ((r() * 2.6) | 0);
+    var nfl = 1 + ((r() * (small ? 1.9 : 2.6)) | 0);
     for (var j = 0; j < nfl; j++) {
-      var rad = 0.085 + r() * 0.04;
+      var rad = (0.085 + r() * 0.04) * (Q.low ? 1.15 : 1);
       ps.set(s[0] + (r() - 0.5) * 0.36, h + 0.08 + r() * 0.12, s[1] + (r() - 0.5) * 0.28);
       q4.setFromEuler(eul.set(r() * 3, r() * 3, r() * 3)); sc.set(rad, rad * 0.75, rad);
       flowers.setMatrixAt(nf, mtx.compose(ps, q4, sc));
@@ -335,7 +337,7 @@ function createScene(W) {
       nf++;
     }
   });
-  flowers.count = nf;
+  flowers.count = nf; flowers.userData.thin = true;
   group.add(bushes, flowers);
 
   // Trees round the edges, dark against the dusk.
@@ -359,7 +361,7 @@ function createScene(W) {
       mesh.setMatrixAt(k, mtx.compose(ps, q4, sc));
       mesh.setColorAt(k, treeCols[k % 4]);
     });
-    mesh.count = list.length;
+    mesh.count = list.length; mesh.userData.thin = !gi;
     group.add(mesh);
   });
 
@@ -467,12 +469,12 @@ function createScene(W) {
   // A few fireflies loose over the field all night.
   var loose = new PointSet();
   for (k2 = 0; k2 < (small ? 80 : 150); k2++) loose.add((r() - 0.5) * 30, 0.5 + r() * 2.2, 6 - r() * 34, 0, r(), 0, 0.8 + r() * 0.5, col('#e8f08a'));
-  addPoints(loose,
+  tag(addPoints(loose,
     'vec4 place(){ float s = aData.y;\n' +
     ' vec3 p = position + vec3(sin(uTime * 0.3 + s * 30.0) * 0.9, sin(uTime * 0.5 + s * 17.0) * 0.35, cos(uTime * 0.27 + s * 23.0) * 0.9);\n' +
     ' float tw = pow(0.5 + 0.5 * sin(uTime * (1.0 + s) * 1.6 + s * 40.0), 3.0);\n' +
     ' return vec4(p, smoothstep(0.45, 1.0, uNight) * tw * (1.0 - uFest * 0.5)); }\n',
-    [[GLOW_F, 0.09, 1.6, 2]]);
+    [[GLOW_F, 0.09, 1.6, 2]]), 'pts');
 
   // ── Fire ───────────────────────────────────────────────────────────────
   var CS = '\n #include <colorspace_fragment>\n';
@@ -512,11 +514,11 @@ function createScene(W) {
   addPoints(fireGlow, 'vec4 place(){ return vec4(position, uFire * (0.8 + 0.2 * sin(uTime * 9.0) * sin(uTime * 5.3))); }\n', [[HALO_F, 5.5, 4.0, 4]]);
   var embers = new PointSet();
   for (k2 = 0; k2 < (small ? 50 : 90); k2++) embers.add(FIRE.x, FIRE.y, FIRE.z, r(), r(), r(), 0.6 + r() * 0.6, col('#ffa040'));
-  addPoints(embers,
+  tag(addPoints(embers,
     'vec4 place(){ float f = fract(uTime * (0.25 + aData.y * 0.25) + aData.x);\n' +
     ' vec3 p = position + vec3(sin(f * 8.0 + aData.y * 40.0) * 0.25 * f + (aData.z - 0.5) * 0.4, 0.3 + f * 3.4, cos(f * 7.0 + aData.y * 30.0) * 0.25 * f);\n' +
     ' return vec4(p, uFire * (1.0 - f) * smoothstep(0.0, 0.1, f)); }\n',
-    [[GLOW_F, 0.06, 1.4, 5]]);
+    [[GLOW_F, 0.06, 1.4, 5]]), 'pts');
 
   // ── Seven pheras: a golden thread looping round the fire ──────────────
   var thread = new PointSet(), NT = small ? 1100 : 1800;
@@ -542,22 +544,22 @@ function createScene(W) {
   var petalCols = ['#ff8c00', '#ffb21a', '#e8590c', '#c21e3a', '#f06a8a', '#ffd04a', '#fff0d8'].map(col);
   var drift = new PointSet();
   for (k2 = 0; k2 < (small ? 160 : 280); k2++) drift.add((r() - 0.5) * 30, r() * 14, 26 - r() * 44, 0, r(), 0, 0.8 + r() * 0.5, petalCols[k2 % 5]);
-  addPoints(drift,
+  tag(addPoints(drift,
     'vec4 place(){ vec3 B = vec3(30.0, 14.0, 44.0), O = vec3(-15.0, 0.0, -18.0); float s = aData.y;\n' +
     ' vec3 p = position + vec3(uTime * 0.5 + sin(uTime * 0.7 + s * 20.0) * 0.6, -uTime * (0.3 + s * 0.3), sin(uTime * 0.45 + s * 9.0) * 0.6);\n' +
     ' p = O + mod(p - O, B); vCol = aCol * uLit;\n' +
     ' return vec4(p, uDrift); }\n',
-    [[PETAL_F, 0.13, 1.5, 7, true]]);
+    [[PETAL_F, 0.13, 1.5, 7, true]]), 'pts');
   var shower = new PointSet();
   for (k2 = 0; k2 < (small ? 520 : 950); k2++) shower.add(0, 0, MZ, r(), r(), r(), 0.8 + r() * 0.5, petalCols[k2 % petalCols.length]);
-  addPoints(shower,
+  tag(addPoints(shower,
     'vec4 place(){ float s = aData.y, Ht = 9.5;\n' +
     ' float f = fract(aData.x + uTime * (0.045 + s * 0.035));\n' +
     ' float an = aData.z * 6.2832 + f * 1.4, rad = mix(1.2 + aData.z * 7.0, 0.8 + aData.z * 3.0, f);\n' +
     ' vec3 p = position + vec3(cos(an) * rad + sin(uTime * 1.3 + s * 20.0) * 0.3, Ht - f * Ht, sin(an) * rad + cos(uTime * 1.1 + s * 15.0) * 0.3);\n' +
     ' vCol = aCol * uLit;\n' +
     ' return vec4(p, uPetal * smoothstep(0.0, 0.06, f) * (1.0 - smoothstep(0.92, 1.0, f))); }\n',
-    [[PETAL_F, 0.11, 1.5, 7, true]]);
+    [[PETAL_F, 0.11, 1.5, 7, true]]), 'pts');
 
   // ── Sky lanterns ───────────────────────────────────────────────────────
   var lant = new PointSet();
@@ -565,13 +567,13 @@ function createScene(W) {
     var lx = (r() - 0.5) * 34, lz = 4 - r() * 40;
     lant.add(lx, 1 + r() * 5, lz, r() * 0.35, r(), 0, 0.8 + r() * 0.5);
   }
-  addPoints(lant,
+  tag(addPoints(lant,
     'vec4 place(){ float s = aData.y, t = clamp((uLant - aData.x) / 0.65, 0.0, 1.0);\n' +
     ' float up = t * (16.0 + s * 34.0) + uTime * 0.12 * step(0.001, t);\n' +
     ' vec3 p = position + vec3(sin(uTime * 0.25 + s * 30.0) * 0.5 + up * 0.12 * (s - 0.3), up + sin(uTime * 0.8 + s * 10.0) * 0.12, -up * 0.22 * s);\n' +
     ' float fl = 0.85 + 0.15 * sin(uTime * 7.0 + s * 40.0);\n' +
     ' return vec4(p, smoothstep(0.0, 0.04, t) * fl); }\n',
-    [[LANTERN_F, 0.75, 2.6, 3]]);
+    [[LANTERN_F, 0.75, 2.6, 3]]), 'pts');
 
   // ── Fireworks: a few gentle bursts high over the mandap ────────────────
   var fw = new PointSet(), FWB = small ? 5 : 7, FWN = small ? 120 : 200;
@@ -802,7 +804,10 @@ export function mount(W) {
           }
         });
       };
-      if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 1200 }); else setTimeout(go, 60);
+      var fired = false, once = function () { if (!fired) { fired = true; go(); } };
+      if (W.wants('story')) return once();
+      if (window.requestIdleCallback) window.requestIdleCallback(once, { timeout: 1200 }); else setTimeout(once, 60);
+      (function poll() { if (fired) return; if (W.wants('story')) once(); else requestAnimationFrame(poll); })();
     });
   }
   // If the world fails before the scene is built, give the list back too.

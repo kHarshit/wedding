@@ -46,3 +46,6 @@
 .skip-rsvp:hover{border-color:rgba(232,190,110,.85)}
 .skip-rsvp:focus-visible{outline:1px solid #e9cf9a;outline-offset:3px}
 @media (max-width:640px){.skip-rsvp{left:calc(max(12px,env(safe-area-inset-left)) + 50px);bottom:calc(max(14px,env(safe-area-inset-bottom)) + 4px)}}
+/* Reduced motion: no drifting specks at all (base.css only shortens animations). */
+@media (prefers-reduced-motion:reduce){#particles{display:none}}
+@media (prefers-reduced-motion:reduce){#music.playing .eq i{animation:none;transform:scaleY(.75)}#music.playing .eq i:nth-child(2n){transform:scaleY(.5)}}

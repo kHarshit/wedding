@@ -11,7 +11,7 @@
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, notchShape, shiftPts, swag, groundShade,
          Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, PETAL_F, diyaBowls, broadleaf, ashoka, treeMesh,
-         rangoliTexture, rangoli, pool, worldUV, stoneTexture, onionDome } from '../lib.js';
+         rangoliTexture, rangoli, pool, worldUV, stoneTexture, onionDome , Q, tag } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { COURT, groundH } from '../land.js';
 
@@ -385,22 +385,22 @@ export function build(W, opts) {
       ' float on = aData.x < 0.0 ? max(uOn, 0.25) : uOn;\n' +
       ' vCol = vec3(1.0, 0.58, 0.24); return vec4(Q, ' + amt + ' * on * inside * (0.8 + 0.2 * sin(uTime * 3.0 + aData.y * 20.0))); }\n';
   };
-  pk.add(lamps, MIRROR('0.16', '0.42'), [[HALO_F, 0.45, 1.8, 2], [GLOW_F, 0.12, 1.4, 2]]);
-  pk.add(floatDiya, MIRROR('0.16', '0.5'), [[HALO_F, 0.45, 1.8, 2], [GLOW_F, 0.12, 1.4, 2]]);
+  tag(pk.add(lamps, MIRROR('0.16', '0.42'), [[HALO_F, 0.45, 1.8, 2], [GLOW_F, 0.12, 1.4, 2]]), 'lowSkip');
+  tag(pk.add(floatDiya, MIRROR('0.16', '0.5'), [[HALO_F, 0.45, 1.8, 2], [GLOW_F, 0.12, 1.4, 2]]), 'lowSkip');
   pk.add(fairy, 'vec4 place(){ float tw = 0.7 + 0.3 * sin(uTime * (1.3 + aData.y * 2.0) + aData.y * 50.0); return vec4(position, uOn * tw); }\n', [[GLOW_F, 0.17, 1.6, 2]]);
   pk.add(halos, 'vec4 place(){ return vec4(position, (0.12 + 0.5 * uOn) * uGlow); }\n', [[HALO_F, 1.2, 2.0, 1]]);
-  pk.add(petalsW,
+  tag(pk.add(petalsW,
     'vec4 place(){ vec3 p = position + vec3(sin(uTime * 0.15 + aData.y * 9.0) * 0.18, 0.0, cos(uTime * 0.12 + aData.y * 7.0) * 0.18);\n' +
     ' vCol = aCol * uLit; return vec4(p, 0.95); }\n',
-    [[PETAL_F, 0.09, 1.3, 3, true]]);
+    [[PETAL_F, 0.09, 1.3, 3, true]]), 'pts');
   // A few petals adrift in the air.
   var air = new PointSet();
   for (var ak = 0; ak < (small ? 70 : 130); ak++) air.add((r() - 0.5) * 24, r() * 7, -2 - r() * 40, 0, r(), 0, 0.8 + r() * 0.5, pCols[ak % pCols.length]);
-  pk.add(air,
+  tag(pk.add(air,
     'vec4 place(){ vec3 B = vec3(24.0, 7.0, 40.0), O = vec3(-12.0, 0.0, -42.0); float s = aData.y;\n' +
     ' vec3 p = position + vec3(uTime * 0.35 + sin(uTime * 0.7 + s * 20.0) * 0.6, -uTime * (0.22 + s * 0.25), sin(uTime * 0.45 + s * 9.0) * 0.6);\n' +
     ' p = O + mod(p - O, B); vCol = aCol * uLit; return vec4(p, 0.9); }\n',
-    [[PETAL_F, 0.12, 1.4, 7, true, 1.5]]);
+    [[PETAL_F, 0.12, 1.4, 7, true, 1.5]]), 'pts');
 
   var poolTex = softSprite('rgba(255,170,90,1)', 'rgba(255,120,40,0)');
   var pools = [pool(group, poolTex, 0, 0, -30, 9), pool(group, poolTex, 0, PH0, PZ, 8), pool(group, poolTex, 0, 0, QZC, 13, 0.85)];

@@ -27,6 +27,17 @@ export function rng(seed) {
   };
 }
 export function col(h) { return new THREE.Color(h); }
+
+// The quality tier the places are being built at (js/world/engine.js sets
+// it before any place is built): small for medium and low, low for low.
+// Builders read it for their counts and shapes; the engine later thins
+// anything tagged with thin() if the tier drops during the visit.
+export var Q = { tier: 'high', small: false, low: false };
+// Tag objects for the engine's tier changes: 'thin' (instanced meshes whose
+// instances can be thinned), 'pts' (point fields that can draw fewer
+// points; their order must be random), 'lowSkip' (decorative layers dropped
+// at low).
+export function tag(objs, key) { [].concat(objs).forEach(function (o) { if (o) o.userData[key] = true; }); return objs; }
 export function mq(q) { return !!(window.matchMedia && window.matchMedia(q).matches); }
 
 // ── Point fields ─────────────────────────────────────────────────────────
@@ -248,7 +259,7 @@ Garlands.prototype.strand = function (x, y, z, count, step, rad, roseEvery) {
 };
 // small: a 20-face ball instead of 36 (phones; no difference at this size).
 Garlands.prototype.mesh = function (emissive, small) {
-  var m = new THREE.InstancedMesh(small ? new THREE.IcosahedronGeometry(1, 0) : new THREE.DodecahedronGeometry(1, 0),
+  var m = new THREE.InstancedMesh(Q.low ? new THREE.OctahedronGeometry(1, 0) : small ? new THREE.IcosahedronGeometry(1, 0) : new THREE.DodecahedronGeometry(1, 0),
     new THREE.MeshLambertMaterial({ color: '#ffffff', emissive: emissive || '#4a1a00' }), Math.max(1, this.balls.length));
   var mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3(), e = new THREE.Euler();
   this.balls.forEach(function (b, k) {
@@ -400,9 +411,11 @@ export function broadleaf(bark, leaf) {
   bark = bark || '#3a2a20'; leaf = leaf || '#ffffff';
   var rr = rng(77), parts = [tinted(new THREE.CylinderGeometry(0.14, 0.26, 3.4, 7).translate(0, 1.7, 0), bark)];
   parts.push(tinted(new THREE.CylinderGeometry(0.05, 0.1, 1.7, 5).rotateZ(0.7).translate(0.5, 3.1, 0), bark));
-  for (var k = 0; k < 7; k++) {
-    var rad = 0.9 + rr() * 0.7, a = rr() * Math.PI * 2, d = k === 0 ? 0 : 0.8 + rr() * 0.6;
-    parts.push(tinted(new THREE.IcosahedronGeometry(rad, 1).scale(1, 0.82, 1)
+  // Phones: six plainer crowns (20 faces each), low five.
+  var nc = Q.low ? 5 : Q.small ? 6 : 7;
+  for (var k = 0; k < nc; k++) {
+    var rad = (0.9 + rr() * 0.7) * (nc < 7 ? 1.12 : 1), a = rr() * Math.PI * 2, d = k === 0 ? 0 : 0.8 + rr() * 0.6;
+    parts.push(tinted(new THREE.IcosahedronGeometry(rad, Q.small ? 0 : 1).scale(1, 0.82, 1)
       .translate(Math.cos(a) * d, 4.1 + rr() * 1.5 + (k === 0 ? 0.7 : 0), Math.sin(a) * d), leaf));
   }
   return merge(parts);
@@ -413,9 +426,9 @@ export function ashoka(bark, leaf) {
   var parts = [tinted(new THREE.CylinderGeometry(0.08, 0.14, 2, 6).translate(0, 1, 0), bark)];
   for (var k = 0; k < 6; k++) {
     var y = 1.5 + k * 1.0, rad = lerp(0.95, 0.5, k / 5);
-    parts.push(tinted(new THREE.IcosahedronGeometry(rad, 1).scale(1, 1.25, 1).translate(0, y + 0.6, 0), leaf));
+    parts.push(tinted(new THREE.IcosahedronGeometry(rad, Q.small ? 0 : 1).scale(1, 1.25, 1).translate(0, y + 0.6, 0), leaf));
   }
-  parts.push(tinted(new THREE.IcosahedronGeometry(0.4, 1).scale(1, 1.6, 1).translate(0, 7.9, 0), leaf));
+  parts.push(tinted(new THREE.IcosahedronGeometry(0.4, Q.small ? 0 : 1).scale(1, 1.6, 1).translate(0, 7.9, 0), leaf));
   return merge(parts);
 }
 // Instanced trees of one kind: spots [[x, y, z, scale, rotY, colour], ...].
@@ -428,15 +441,19 @@ export function treeMesh(geo, spots, double) {
     mesh.setColorAt(k, s[5]);
   });
   mesh.count = spots.length;
+  mesh.userData.thin = spots.length > 12;
   return mesh;
 }
 
 // ── Lamps ────────────────────────────────────────────────────────────────
 // Diya bowls: a lathe-turned clay lamp, instanced wherever a flame burns.
 export function diyaGeometry(seg) {
-  var pts = [[0, 0], [0.05, 0.004], [0.075, 0.025], [0.085, 0.05], [0.07, 0.05], [0.05, 0.03], [0, 0.03]]
+  // Phones get a four-band bowl (the lip and the oil are what read) with fewer sides.
+  var pts = (Q.small ? [[0, 0], [0.06, 0.006], [0.085, 0.05], [0.055, 0.03], [0, 0.03]]
+                     : [[0, 0], [0.05, 0.004], [0.075, 0.025], [0.085, 0.05], [0.07, 0.05], [0.05, 0.03], [0, 0.03]])
     .map(function (p) { return new THREE.Vector2(p[0] * 1.4, p[1] * 1.4); });
-  var geo = new THREE.LatheGeometry(pts, seg || 12).toNonIndexed(), pos = geo.attributes.position, cs = [];
+  seg = Math.min(seg || 12, Q.low ? 5 : Q.small ? 6 : 12);
+  var geo = new THREE.LatheGeometry(pts, seg).toNonIndexed(), pos = geo.attributes.position, cs = [];
   var inner = col('#e08a3c'), lo = col('#7a3a1e'), hi = col('#b8602c'), c = col('#000');
   for (var k = 0; k < pos.count; k++) {
     var y = pos.getY(k), rr2 = Math.hypot(pos.getX(k), pos.getZ(k));

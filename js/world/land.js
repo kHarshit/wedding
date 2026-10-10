@@ -12,7 +12,7 @@
  * across the fields, the pin for the venue (the Venue's night map). The land
  * is the story's own ground and colours, flattened where these places stand.
  */
-import { THREE, col, smooth } from './lib.js';
+import { THREE, col, smooth, Q } from './lib.js';
 
 export var STORY = {
   HOME_A: { x: -13, z: -17, rot: 0.42 },
@@ -76,7 +76,7 @@ function patchwork(x, z) {
 }
 
 export function buildLand(small) {
-  var H = STORY, gSeg = small ? 90 : 140;
+  var H = STORY, gSeg = Q.low ? 60 : small ? 72 : 140;
   // Deep enough south that the dawn's climb out of the pavilion sees fields, not the land's edge.
   var gGeo = new THREE.PlaneGeometry(460, 540, gSeg, Math.round(gSeg * 540 / 460)).rotateX(-Math.PI / 2).translate(0, 0, -110);
   var gp = gGeo.attributes.position, gCols = new Float32Array(gp.count * 3);

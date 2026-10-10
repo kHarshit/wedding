@@ -14,7 +14,7 @@
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, notchShape, bandShape, shiftPts, swag,
          groundShade, Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, PETAL_F, worldUV, stoneTexture, onionDome,
-         ashoka, broadleaf, treeMesh, rangoliTexture, rangoli, pool } from '../lib.js';
+         ashoka, broadleaf, treeMesh, rangoliTexture, rangoli, pool , Q, tag } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { keyed, cols } from '../timeline.js';
 import { BARAAT } from '../land.js';
@@ -119,11 +119,11 @@ export function build(W) {
     var ti = (r() * torches.p.length / 3) | 0;
     sparks.add(torches.p[ti * 3], torches.p[ti * 3 + 1] + 0.15, torches.p[ti * 3 + 2], r(), r(), r(), 0.6 + r() * 0.6, col('#ffa040'));
   }
-  pk.add(sparks,
+  tag(pk.add(sparks,
     'vec4 place(){ float f = fract(uTime * (0.3 + aData.y * 0.3) + aData.x);\n' +
     ' vec3 p = position + vec3(sin(f * 8.0 + aData.y * 40.0) * 0.18 * f, f * 2.4, cos(f * 7.0 + aData.y * 30.0) * 0.18 * f);\n' +
     ' return vec4(p, uOn * (1.0 - f) * smoothstep(0.0, 0.1, f)); }\n',
-    [[GLOW_F, 0.05, 1.4, 5]]);
+    [[GLOW_F, 0.05, 1.4, 5]]), 'pts');
 
   // ── Arches of lights over the avenue, pulsing to the dhol ──────────────
   var arcs = new PointSet(), cA = [col('#ffd88a'), col('#ffe6b0'), col('#ffc060')];
@@ -257,14 +257,15 @@ export function build(W) {
     petals.setMatrixAt(j, mtx.compose(ps.set(p2[0], p2[1], p2[2]), q4.setFromEuler(e3.set(r() * 0.3, r() * 6, r() * 0.3)), sc.set(0.055, 1, 0.032)));
     petals.setColorAt(j, pCols[j % pCols.length]);
   });
+  petals.userData.thin = true;
   group.add(petals);
   var air = new PointSet();
   for (k = 0; k < (small ? 70 : 120); k++) air.add((r() - 0.5) * 14, r() * 8, 4 - r() * GZ, 0, r(), 0, 0.8 + r() * 0.5, pCols[k % pCols.length]);
-  pk.add(air,
+  tag(pk.add(air,
     'vec4 place(){ vec3 B = vec3(14.0, 8.0, ' + GZ + '.0), O = vec3(-7.0, 0.0, ' + (-GZ + 4) + '.0); float s = aData.y;\n' +
     ' vec3 p = position + vec3(uTime * 0.2 + sin(uTime * 0.7 + s * 20.0) * 0.5, -uTime * (0.22 + s * 0.2), sin(uTime * 0.45 + s * 9.0) * 0.5);\n' +
     ' p = O + mod(p - O, B); vCol = aCol * uLit; return vec4(p, 0.9); }\n',
-    [[PETAL_F, 0.12, 1.4, 7, true, 1.4]]);
+    [[PETAL_F, 0.12, 1.4, 7, true, 1.4]]), 'pts');
 
   // ── Fireworks over the gate ────────────────────────────────────────────
   var fw = new PointSet(), FWB = small ? 4 : 6, FWN = small ? 110 : 180;

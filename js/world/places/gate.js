@@ -15,7 +15,7 @@
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, notchShape, bandShape, shapeFrom, swag,
          groundShade, mergeUV, Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, diyaGeometry, rangoliTexture,
-         rangoli, pool, worldUV, stoneTexture, diyaBowls, jaaliTexture } from '../lib.js';
+         rangoli, pool, worldUV, stoneTexture, diyaBowls, jaaliTexture , Q, tag } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { COURT } from '../land.js';
 
@@ -362,6 +362,7 @@ export function build(W, opts) {
     petalMesh.setMatrixAt(k, mtx.compose(ps3.set(p[0], 0.03 + r() * 0.01, p[1]), q4.setFromEuler(e3.set(r() * 0.3, r() * 6, r() * 0.3)), sc3.set(0.045, 1, 0.026)));
     petalMesh.setColorAt(k, pCols[k % pCols.length]);
   });
+  petalMesh.userData.thin = true;
   group.add(petalMesh);
 
   // ── Assemble ───────────────────────────────────────────────────────────
@@ -389,12 +390,12 @@ export function build(W, opts) {
   // Fireflies in the last of the night.
   var flies = new PointSet();
   for (var fk = 0; fk < (small ? 24 : 40); fk++) flies.add((r() - 0.5) * 14, 0.4 + r() * 3.2, 1 + r() * 8, 0, r(), 0, 0.8 + r() * 0.5, col(fk % 3 ? '#ffd27a' : '#f4f0a0'));
-  pk.add(flies,
+  tag(pk.add(flies,
     'vec4 place(){ float s = aData.y;\n' +
     ' vec3 p = position + vec3(sin(uTime * 0.3 + s * 30.0) * 0.9, sin(uTime * 0.5 + s * 17.0) * 0.35, cos(uTime * 0.27 + s * 23.0) * 0.6);\n' +
     ' float tw = pow(0.5 + 0.5 * sin(uTime * (1.0 + s) * 1.6 + s * 40.0), 3.0);\n' +
     ' return vec4(p, tw * uFlies); }\n',
-    [[GLOW_F, 0.08, 1.6, 2]]);
+    [[GLOW_F, 0.08, 1.6, 2]]), 'pts');
 
   var poolTex = softSprite('rgba(255,170,90,1)', 'rgba(255,120,40,0)');
   var pools = [-1, 1].map(function (s) { return pool(group, poolTex, s * DX, 0.02, DZ, 4.2); });

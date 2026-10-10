@@ -15,7 +15,7 @@
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, notchShape, shiftPts, swag, groundShade,
          Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, LANTERN_F, diyaBowls, worldUV, stoneTexture, onionDome,
-         broadleaf, ashoka, treeMesh, pool } from '../lib.js';
+         broadleaf, ashoka, treeMesh, pool , Q, tag } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { keyed, cols } from '../timeline.js';
 import { PAVILION } from '../land.js';
@@ -147,9 +147,10 @@ export function build(W) {
       ' float inside = step(abs(Q.x), ' + (QX - 0.05).toFixed(2) + ') * step(abs(Q.z + ' + (L / 2).toFixed(2) + '), ' + (L / 2 - 0.05).toFixed(2) + ');\n' +
       ' vCol = vec3(1.0, 0.6, 0.28); return vec4(Q, ' + amt + ' * inside * (0.8 + 0.2 * sin(uTime * 2.0 + aData.y * 20.0))); }\n';
   };
+  // (The pool's reflections stay at every tier: without them the water reads as a flat dark slab.)
   pk.add(floatD, MIRROR('0.17', '0.55'), [[HALO_F, 0.5, 1.8, 2], [GLOW_F, 0.12, 1.4, 2]]);
   pk.add(rimD, MIRROR('0.16', '0.4'), [[HALO_F, 0.45, 1.8, 2], [GLOW_F, 0.1, 1.4, 2]]);
-  pk.add(lanterns, MIRROR('0.04', '0.45'), [[HALO_F, 0.9, 1.8, 2]]);
+  tag(pk.add(lanterns, MIRROR('0.04', '0.45'), [[HALO_F, 0.9, 1.8, 2]]), 'lowSkip');
   var lotusParts = [];
   for (var ring = 0; ring < 2; ring++) for (k = 0; k < (ring ? 6 : 8); k++) {
     var a = (k + ring * 0.5) / (ring ? 6 : 8) * Math.PI * 2;
@@ -203,7 +204,7 @@ export function build(W) {
     if (riseT0 >= 0) f.slow = 1;   // keep the clock running while the lantern climbs
     // Quiet: the night dims and the scene slows while the guest replies.
     var w = f.w;
-    f.P.hi *= lerp(1, 0.75, w); f.P.st *= lerp(1, 0.8, w);
+    f.P.hi *= lerp(1, 0.85, w); f.P.st *= lerp(1, 0.8, w);
     if (riseT0 < 0) f.slow = Math.min(f.slow, lerp(1, 0.35, w));
     for (var i = 0; i < pools.length; i++) pools[i].material.opacity = 0.32;
     var fl = f.reduce ? 1 : 0.92 + 0.08 * Math.sin(f.time * 6.1);
@@ -215,5 +216,5 @@ export function build(W) {
       W.lamp(o.x + U.uLX.value + Math.sin(t * 0.6) * 0.3 + t * 0.12, WY + 0.3 + up, o.z + LZ0 - t * 0.35, '#ffa040', 4 * smooth(0, 1.2, t) * (1 - smooth(10, 20, t)), 10, 1.6);
     }
   }
-  return { group: group, frame: frame };
+  return { group: group, frame: frame, centre: new THREE.Vector3(o.x, 2, o.z - 12) };
 }
