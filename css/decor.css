@@ -35,3 +35,14 @@
 @media (max-width:767px){.corner-floral{position:absolute;z-index:1}.corner-floral img{width:clamp(150px,42vw,220px)}.corner-floral.br img{width:clamp(200px,56vw,300px)}}
 /* ---- Three flying butterflies ---- */
 #flutter{position:fixed;inset:0;z-index:9995;pointer-events:none;overflow:hidden}
+/* "RSVP ↓" pill beside the music button (js/skip-rsvp.js) */
+.skip-rsvp{position:fixed;left:calc(max(20px,env(safe-area-inset-left)) + 58px);bottom:calc(max(24px,env(safe-area-inset-bottom)) + 8px);z-index:9990;
+  display:inline-flex;align-items:center;gap:.5em;height:32px;padding:0 14px 0 calc(14px + .32em);border:1px solid rgba(200,164,93,.45);border-radius:999px;
+  background:rgba(18,11,8,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  font-family:var(--font-cinzel);font-size:.62rem;letter-spacing:.32em;color:#f6e6c4;
+  opacity:0;visibility:hidden;transform:translateY(6px);transition:opacity .5s ease,transform .5s ease,visibility 0s linear .5s,border-color .3s ease}
+.skip-rsvp span{font-family:var(--font-body);letter-spacing:0;font-size:.8rem}
+.skip-rsvp.show{opacity:1;visibility:visible;transform:none;transition:opacity .5s ease,transform .5s ease,visibility 0s,border-color .3s ease}
+.skip-rsvp:hover{border-color:rgba(232,190,110,.85)}
+.skip-rsvp:focus-visible{outline:1px solid #e9cf9a;outline-offset:3px}
+@media (max-width:640px){.skip-rsvp{left:calc(max(12px,env(safe-area-inset-left)) + 50px);bottom:calc(max(14px,env(safe-area-inset-bottom)) + 4px)}}

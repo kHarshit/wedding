@@ -51,11 +51,25 @@ export function build(W) {
   // Warm cream marble and gold, lit by the chandeliers and the canopy.
   var M = { marble: '#fbe9cc', marble2: '#f0d6ae', inlay: '#d9aa48', red: '#8e1f2c', gold: '#e2ae4a', lawn: '#2e4a24' };
   var cF = [col('#ffd88a'), col('#ffe6b0'), col('#ffc060'), col('#fff0d0')];
-  var fairy = new PointSet(), flames = new PointSet(), crystals = new PointSet(), chand = [];
+  var fairy = new PointSet(), flames = new PointSet(), crystals = new PointSet(), chand = [], roofLamps = new PointSet();
 
   // ── Lawn and plinth ────────────────────────────────────────────────────
+  // The lawn: mown grass in stripes, garden beds of marigolds and roses, and
+  // gravel walks (so it reads from above as a garden, not a flat sheet).
+  var lc = document.createElement('canvas'); lc.width = lc.height = 512;
+  var lx = lc.getContext('2d'), lr = rng(7);
+  for (var ls = 0; ls < 16; ls++) { lx.fillStyle = ls % 2 ? '#3c5c2a' : '#46682f'; lx.fillRect(ls * 32, 0, 32, 512); }
+  for (var ln = 0; ln < 2600; ln++) { lx.fillStyle = lr() < 0.5 ? 'rgba(20,40,10,0.25)' : 'rgba(120,150,70,0.18)'; lx.fillRect(lr() * 512, lr() * 512, 2, 2 + lr() * 3); }
+  lx.fillStyle = '#c8b08a';
+  [[0, 236, 512, 40], [236, 0, 40, 512]].forEach(function (q) { lx.fillRect(q[0], q[1], q[2], q[3]); });
+  [[96, 96], [416, 96], [96, 416], [416, 416]].forEach(function (c) {
+    lx.fillStyle = '#c8b08a'; lx.beginPath(); lx.arc(c[0], c[1], 70, 0, 7); lx.fill();
+    lx.fillStyle = '#2e4a22'; lx.beginPath(); lx.arc(c[0], c[1], 58, 0, 7); lx.fill();
+    for (var b = 0; b < 140; b++) { var a = lr() * 7, rr = 10 + lr() * 44; lx.fillStyle = ['#ff9a1a', '#ffc21f', '#c2183a', '#f4a3b6'][(lr() * 4) | 0]; lx.beginPath(); lx.arc(c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr, 3, 0, 7); lx.fill(); }
+  });
+  var lawnTex = new THREE.CanvasTexture(lc); lawnTex.colorSpace = THREE.SRGBColorSpace; lawnTex.wrapS = lawnTex.wrapT = THREE.RepeatWrapping; lawnTex.repeat.set(2, 2.4); lawnTex.anisotropy = 4;
   group.add(new THREE.Mesh(new THREE.PlaneGeometry(44, 52).rotateX(-Math.PI / 2).translate(0, 0.015, -D / 2 + 4),
-    new THREE.MeshLambertMaterial({ color: '#3e5e2c', emissive: '#14200c' })));
+    new THREE.MeshLambertMaterial({ map: lawnTex, emissive: '#18240e' })));
   // A paved path across the lawn to the steps.
   var pt = stoneTexture().clone(); pt.needsUpdate = true; pt.repeat.set(2.4, 6);
   group.add(new THREE.Mesh(new THREE.PlaneGeometry(4.8, 12).rotateX(-Math.PI / 2).translate(0, 0.025, 7.6),
@@ -110,7 +124,40 @@ export function build(W) {
   var ceil = new THREE.Mesh(new THREE.PlaneGeometry(HW * 2, D).rotateX(Math.PI / 2).translate(0, CH - 0.01, -D / 2),
     new THREE.MeshLambertMaterial({ map: ceilTex, emissive: '#2a0a0e' }));
   group.add(ceil);
-  for (var mx = -HW; mx <= HW + 0.01; mx += 0.65) box(g, mx - 0.12, mx + 0.12, CH + 1.1, CH + 1.4, 0.15, 0.4, M.marble);
+  // The roof terrace, for the views from above: an inlaid floor (red
+  // sandstone border, marble with gold-ruled stars), parapets with merlons
+  // all round, small chhatris down the long sides, diyas on the parapets
+  // and strings of lights across.
+  var rc = document.createElement('canvas'); rc.width = 128; rc.height = 128;
+  var rx = rc.getContext('2d');
+  rx.fillStyle = '#f2dcb8'; rx.fillRect(0, 0, 128, 128);
+  rx.strokeStyle = '#b8743c'; rx.lineWidth = 3; rx.strokeRect(4, 4, 120, 120);
+  rx.fillStyle = '#c99436'; rx.beginPath();
+  for (var rk = 0; rk < 16; rk++) { var ra = rk / 16 * Math.PI * 2, rr2 = rk % 2 ? 18 : 40; rx.lineTo(64 + Math.cos(ra) * rr2, 64 + Math.sin(ra) * rr2); }
+  rx.closePath(); rx.fill();
+  rx.fillStyle = '#9c3a2c'; rx.beginPath(); rx.arc(64, 64, 12, 0, 7); rx.fill();
+  var roofTex = new THREE.CanvasTexture(rc); roofTex.colorSpace = THREE.SRGBColorSpace; roofTex.wrapS = roofTex.wrapT = THREE.RepeatWrapping;
+  roofTex.repeat.set((HW * 2 - 1) / 2.4, (D - 0.4) / 2.4); roofTex.anisotropy = 4;
+  var roofFloor = new THREE.Mesh(new THREE.PlaneGeometry(HW * 2 - 1, D - 0.4).rotateX(-Math.PI / 2).translate(0, CH + 1.115, -D / 2),
+    new THREE.MeshLambertMaterial({ map: roofTex, emissive: '#3a2410' }));
+  group.add(roofFloor);
+  box(g, -HW - 0.3, HW + 0.3, CH + 1.1, CH + 1.12, -D - 0.4, 0.4, '#a8543c');                    // sandstone border round it
+  [[-HW - 0.3, HW + 0.3, 0.15, 0.4], [-HW - 0.3, HW + 0.3, -D - 0.4, -D - 0.15]].forEach(function (q) { box(g, q[0], q[1], CH + 1.1, CH + 1.5, q[2], q[3], M.marble); });
+  [-1, 1].forEach(function (s) { box(g, s * HW + (s > 0 ? 0.05 : -0.3), s * HW + (s > 0 ? 0.3 : -0.05), CH + 1.1, CH + 1.5, -D - 0.4, 0.4, M.marble); });
+  for (var mx = -HW; mx <= HW + 0.01; mx += 0.65) { box(g, mx - 0.12, mx + 0.12, CH + 1.5, CH + 1.75, 0.18, 0.38, M.marble); box(g, mx - 0.12, mx + 0.12, CH + 1.5, CH + 1.75, -D - 0.38, -D - 0.18, M.marble); }
+  [-1, 1].forEach(function (s) { for (var mz = 0; mz >= -D; mz -= 0.65) box(g, s * (HW + 0.07) - 0.1, s * (HW + 0.07) + 0.1, CH + 1.5, CH + 1.75, mz - 0.12, mz + 0.12, M.marble); });
+  [-1, 1].forEach(function (s) {
+    [-8.6, -15.6].forEach(function (cz) {
+      var cx = s * (HW - 0.4), y0 = CH + 1.1;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (q) { box(g, cx + q[0] * 0.4 - 0.05, cx + q[0] * 0.4 + 0.05, y0, y0 + 0.9, cz + q[1] * 0.4 - 0.05, cz + q[1] * 0.4 + 0.05, M.marble); });
+      box(g, cx - 0.55, cx + 0.55, y0 + 0.9, y0 + 1.0, cz - 0.55, cz + 0.55, M.marble);
+      g.push(onionDome(0.48, y0 + 1.0, M.marble, small ? 10 : 14).translate(cx, 0, cz));
+      roofLamps.add(cx, y0 + 0.5, cz, 0, r(), 0, 1.3);
+    });
+  });
+  for (var px = -HW + 0.4; px <= HW - 0.39; px += small ? 1.3 : 0.9) { roofLamps.add(px, CH + 1.5, 0.28, 0, r(), 0, 0.8); roofLamps.add(px, CH + 1.5, -D - 0.28, 0, r(), 0, 0.8); }
+  [-1, 1].forEach(function (s) { for (var pz = -1; pz > -D; pz -= small ? 1.3 : 0.9) roofLamps.add(s * (HW + 0.07), CH + 1.5, pz, 0, r(), 0, 0.8); });
+  [-4, -11, -18].forEach(function (z) { swag([-HW + 0.3, CH + 2.4, z], [HW - 0.3, CH + 2.4, z], 0.7, small ? 22 : 34, function (x, y, zz) { fairy.add(x, y, zz, 0, r(), 0, 0.85, cF[(r() * 4) | 0]); }); });
   // Chhatris on the four corners and a dome over the stage.
   [[-HW, 0], [HW, 0], [-HW, -D], [HW, -D]].forEach(function (c) {
     var y0 = CH + 1.1;
@@ -232,7 +279,7 @@ export function build(W) {
   lawnLamps.forEach(function (l, i) { posts.setMatrixAt(i, mtx.makeTranslation(l[0], 0, l[1])); flames.add(l[0], 1.6, l[1], 0, r(), 0, 1.1); });
   group.add(posts);
   var leafCols = ['#ffffff', '#e4ecd8', '#f2f6e8', '#d8e2cc'].map(col), trees = [];
-  [[-15, 6], [-16, -6], [-15.5, -18], [-14.5, -29], [15, 5], [16, -7], [15.5, -19], [14.5, -30], [-7, -33], [7, -33.5]].forEach(function (p, i) {
+  [[-20, 10], [-16, -6], [-15.5, -18], [-14.5, -29], [20, 10], [16, -7], [15.5, -19], [14.5, -30], [-7, -33], [7, -33.5]].forEach(function (p, i) {
     var s = 1.0 + r() * 0.35;
     trees.push([p[0], 0, p[1], s, r() * 6, leafCols[i % 4], 1]);
     // Lights wound through each crown.
@@ -248,6 +295,9 @@ export function build(W) {
   pk.add(fairy, 'vec4 place(){ float tw = 0.7 + 0.3 * sin(uTime * (1.3 + aData.y * 2.0) + aData.y * 50.0); return vec4(position, tw); }\n', [[GLOW_F, 0.15, 1.5, 2]]);
   pk.add(flames, FL + 'vec4 place(){ vCol = vec3(1.0, 0.58, 0.22); return vec4(position, fl()); }\n', [[HALO_F, 0.5, 2.2, 1, false, 2], [FLAME_F, 0.16, 1.8, 2]]);
   pk.add(crystals, 'vec4 place(){ float tw = pow(0.5 + 0.5 * sin(uTime * (2.0 + aData.y * 3.0) + aData.y * 60.0), 4.0); return vec4(position, 0.35 + 0.65 * tw); }\n', [[GLOW_F, 0.06, 1.4, 3]]);
+  group.add(diyaBowls(roofLamps, 1.2, small ? 8 : 12));
+  pk.add(roofLamps, FL + 'vec4 place(){ vCol = vec3(1.0, 0.56, 0.22); return vec4(position + vec3(0.0, 0.18, 0.0), fl()); }\n',
+    [[HALO_F, 0.7, 2.2, 1, false, 2], [FLAME_F, 0.2, 1.6, 2]]);
   var halos = new PointSet();
   [-6.5, -12.5, -18.5].forEach(function (cz) { halos.add(0, CH - 1.35, cz, 0, r(), 0, 4.2, col('#ffc070')); });
   // Diyas along the front steps and both long edges of the plinth, so the

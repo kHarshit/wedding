@@ -251,3 +251,24 @@ html:has(body.world-on){transition:--world-ink .4s ease,--world-ink-soft .4s eas
 .world-on .ev-date{letter-spacing:.24em;font-size:.82rem}
 /* The form's glass follows the hour too (cream by day, plum by night). */
 .world-on .rsvp-card{--glass:var(--panel)}
+
+/* ── The closing ──
+   Room for the camera to rise from the hall into the night map, come down
+   to the pavilion, and rise again into the dawn. */
+.world-likely .corner-floral{display:none}
+.world-on .venue-sec{padding-top:80svh}
+.world-on .rsvp-sec{padding-top:75svh}
+.world-on footer{margin-top:80svh}
+.world-on .map-card{border-color:rgba(232,190,110,.6);box-shadow:0 22px 60px rgba(10,4,14,.5)}
+.world-on .venue-foot{--glass:var(--panel)}
+/* The RSVP's two answers, both solid and clear. */
+.world-on .rsvp-actions .btn-solid{background:#e2ae4a;border-color:#e2ae4a}
+.world-on .rsvp-actions .btn-solid span{color:#1f140a;font-weight:700;opacity:1}
+.world-on .rsvp-actions .btn:not(.btn-solid){background:#5a1a26;border-color:#e8b85a}
+.world-on .rsvp-actions .btn:not(.btn-solid) span{color:#fff6e6;font-weight:700;opacity:1}
+
+/* The footer: a solid panel and the hour's ink for its small lines. */
+.world-on footer .container{--glass:var(--panel)}
+.world-on footer .f-sub,.world-on .credit,.world-on .social a{color:var(--ink-mid);opacity:1}
+.world-on .credit a,.world-on .credit b{color:var(--ink-gold);font-weight:600}
+.world-on .social a svg{stroke:var(--ink-gold)}

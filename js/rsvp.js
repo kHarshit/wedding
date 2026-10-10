@@ -40,6 +40,8 @@
       .then(function(res){
         if(!res||!res.ok)throw new Error("not saved");
         form.classList.add("done");
+        // Let the page celebrate (js/world lifts a lantern from the pool)
+        document.dispatchEvent(new CustomEvent("rsvp:sent",{detail:{attending:attending}}));
         if(attending==="Yes")showCalendar();
         say(attending==="Yes"
           ?"Thank you, "+name+"! We can't wait to celebrate with you."

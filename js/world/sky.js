@@ -18,7 +18,7 @@ import { THREE, col, clamp, lerp, smooth, rng } from './lib.js';
 //   st br mo: stars, bright stars, moon sprite; fd: fog density
 //   rf rm rn: far, middle and near ridges
 var HOURS = [
-  [0.0,  { top: '#070818', mid: '#15122a', hor: '#2a1a30', glow: '#1a0e18', hs: '#3c4280', hg: '#0e080c', hi: 0.6, sc: '#ff9a5c', si: 0, mi: 0.5, so: 0, st: 1, br: 1, mo: 1, fd: 0.011, rf: '#1e1628', rm: '#181222', rn: '#120c1a' }],
+  [0.0,  { top: '#070818', mid: '#15122a', hor: '#2a1a30', glow: '#1a0e18', hs: '#4a52a0', hg: '#1a1218', hi: 0.8, sc: '#ff9a5c', si: 0, mi: 0.9, so: 0, st: 1, br: 1, mo: 1, fd: 0.011, rf: '#1e1628', rm: '#181222', rn: '#120c1a' }],
   [4.6,  { top: '#0a0c26', mid: '#1c1c44', hor: '#3a3058', glow: '#3a2440', hs: '#4a5290', hg: '#120e18', hi: 0.62, sc: '#ff9a6a', si: 0, mi: 0.45, so: 0, st: 0.95, br: 1, mo: 0.9, fd: 0.0095, rf: '#26223e', rm: '#1e1a34', rn: '#16122a' }],
   [5.35, { top: '#101438', mid: '#2c2e62', hor: '#6a5a88', glow: '#7a4058', hs: '#6a74b8', hg: '#1a141e', hi: 0.75, sc: '#ff9a6a', si: 0, mi: 0.35, so: 0, st: 0.7, br: 0.85, mo: 0.7, fd: 0.0095, rf: '#3a3658', rm: '#2e2a4a', rn: '#221e38' }],
   [6.2,  { top: '#3c4f8e', mid: '#a88aa8', hor: '#f2b89a', glow: '#ffa060', hs: '#ffd2bc', hg: '#5a4038', hi: 1.25, sc: '#ffb07a', si: 1.1, mi: 0.05, so: 0.9, st: 0.08, br: 0.1, mo: 0.15, fd: 0.0095, rf: '#a88aa0', rm: '#8a6e88', rn: '#6a5470' }],
@@ -184,6 +184,8 @@ export function createSky(K, scene, small) {
     group.position.copy(camera.position);
     var cz = camera.position.z;
     ridgeGroup.position.set(0, 0, cz - clamp(cz, -20, 50));
+    // From high up the far ridges would show as walls on the land: let them go.
+    ridgeGroup.visible = camera.position.y < 70;
     P.dark = 1 - clamp((P.hor.r + P.hor.g + P.hor.b + P.top.r + P.top.g + P.top.b) / 3.6, 0, 1);
   }
 

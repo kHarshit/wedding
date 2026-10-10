@@ -21,7 +21,7 @@
  * unmount?() }. A stop is { name, places: [names], pose(local, out),
  * local?(y, vh), range?(vh), arc?, mist? } (see timeline.js).
  */
-import { THREE, clamp, lerp, smooth, rng, col, mq, PointSet, pointKit, PETAL_F } from './lib.js';
+import { THREE, clamp, lerp, smooth, rng, col, mq, PointSet, pointKit, PETAL_F, GLOW_F } from './lib.js';
 import { createSky } from './sky.js';
 import { buildLand } from './land.js';
 import { createTimeline } from './timeline.js';
@@ -91,6 +91,42 @@ export function createWorld(K, opts) {
       [[PETAL_F, 0.13, 1.5, 8, true, 1.2]]);
   })();
 
+  // Ambient life near the camera, wherever we are near the ground (not in
+  // the story, which has its own): butterflies by day, fireflies by night.
+  var AU = { uTime: { value: 0 }, uScale: { value: 600 }, uFogD: { value: 0.004 }, uDay: { value: 0 }, uNightK: { value: 0 }, uCam: { value: new THREE.Vector3() } };
+  var ambient = new THREE.Group();
+  scene.add(ambient);
+  (function ambientLife() {
+    var r = rng(77), akit = pointKit(AU, ambient);
+    var BUTTERFLY_F = 'uniform float uTime; varying vec3 vCol; varying float vA; varying float vPx; varying float vSeed;\n' +
+      'void main(){ vec2 p = gl_PointCoord - 0.5; p.y = -p.y;\n' +
+      ' float flap = 0.18 + 0.82 * abs(sin(uTime * 9.0 + vSeed * 40.0));\n' +
+      ' vec2 q = vec2(abs(p.x) / flap, p.y);\n' +
+      ' float up = length((q - vec2(0.17, 0.07)) / vec2(0.17, 0.15)), lo = length((q - vec2(0.12, -0.12)) / vec2(0.11, 0.1));\n' +
+      ' float wing = (1.0 - smoothstep(0.85, 1.0, min(up, lo))) * step(0.012, abs(p.x));\n' +
+      ' float body = (1.0 - smoothstep(0.012, 0.024, abs(p.x))) * (1.0 - smoothstep(0.16, 0.2, abs(p.y)));\n' +
+      ' float a = max(wing, body) * vA; if (a < 0.05) discard;\n' +
+      ' vec3 c = body > 0.5 ? vCol * 0.3 : vCol * (0.7 + 0.45 * smoothstep(1.0, 0.2, min(up, lo)));\n' +
+      ' gl_FragColor = vec4(c, min(a, 1.0));\n #include <colorspace_fragment>\n}';
+    var bs = new PointSet(), bc = ['#f2b33a', '#fff4e0', '#e8783a', '#f4a3b6', '#ffd24a'].map(col);
+    for (var k = 0; k < (small ? 8 : 14); k++) bs.add((r() - 0.5) * 20, 1.0 + r() * 3.2, (r() - 0.5) * 20, 0, r(), 0, 0.8 + r() * 0.4, bc[k % bc.length]);
+    akit.add(bs,
+      'vec4 place(){ float s = aData.y; vec3 B = vec3(20.0, 1.0, 20.0);\n' +
+      ' vec3 p = position + vec3(sin(uTime * 0.31 + s * 20.0) * 2.6 + uTime * 0.4 * (s - 0.5), sin(uTime * 1.3 + s * 7.0) * 0.45, cos(uTime * 0.27 + s * 13.0) * 2.6);\n' +
+      ' p.xz = uCam.xz + mod(p.xz - uCam.xz + B.xz * 0.5, B.xz) - B.xz * 0.5;\n' +
+      ' return vec4(p, uDay); }\n',
+      [[BUTTERFLY_F, 0.32, 3.0, 7, true, 1.2]]);
+    var fs = new PointSet();
+    for (k = 0; k < (small ? 40 : 70); k++) fs.add((r() - 0.5) * 22, 0.4 + r() * 2.6, (r() - 0.5) * 22, 0, r(), 0, 0.8 + r() * 0.5, col(k % 3 ? '#e8f08a' : '#ffd27a'));
+    akit.add(fs,
+      'vec4 place(){ float s = aData.y; vec3 B = vec3(22.0, 1.0, 22.0);\n' +
+      ' vec3 p = position + vec3(sin(uTime * 0.3 + s * 30.0) * 0.9, sin(uTime * 0.5 + s * 17.0) * 0.35, cos(uTime * 0.27 + s * 23.0) * 0.9);\n' +
+      ' p.xz = uCam.xz + mod(p.xz - uCam.xz + B.xz * 0.5, B.xz) - B.xz * 0.5;\n' +
+      ' float tw = pow(0.5 + 0.5 * sin(uTime * (1.0 + s) * 1.6 + s * 40.0), 3.0);\n' +
+      ' return vec4(p, uNightK * tw); }\n',
+      [[GLOW_F, 0.09, 1.6, 2, false, 0.8]]);
+  })();
+
   // ── Places ─────────────────────────────────────────────────────────────
   var places = {};          // name -> { loader, state, place }
   function define(name, loader) { places[name] = { loader: loader, state: 'idle', place: null }; }
@@ -120,8 +156,9 @@ export function createWorld(K, opts) {
   var poseB = { pos: new THREE.Vector3(), tgt: new THREE.Vector3(), tod: 6, mist: 0 };
   var pose = { pos: new THREE.Vector3(), tgt: new THREE.Vector3(), tod: 6, tod2: 6, e: 0, mist: 0 };
   var f = { time: reduce ? 2.6 : 0, dt: 0, tod: 6, P: sky.P, cam: camera, pxScale: 600, fogD: 0.0085, small: small, reduce: reduce,
-            mx: 0, my: 0, aspect: 1, u: 0, w: 1, ys: 0, travel: 0, lamp: lamp, world: null };
+            mx: 0, my: 0, aspect: 1, u: 0, w: 1, ys: 0, travel: 0, slow: 1, lamp: lamp, world: null };
   var override = null;      // the gate drives the camera until the doors are through
+  var speedNow = 1;
   var raysK = 0, viaP = new THREE.Vector3(), viaT = new THREE.Vector3();
   function bez(out, a, v, b, e) { var u = 1 - e; out.set(a.x * u * u + 2 * v.x * u * e + b.x * e * e, a.y * u * u + 2 * v.y * u * e + b.y * e * e, a.z * u * u + 2 * v.z * u * e + b.z * e * e); }
   var hazeK = 0, hazeC = new THREE.Color(), hazeL = new THREE.Color(), WHITE = new THREE.Color('#ffffff');
@@ -209,7 +246,9 @@ export function createWorld(K, opts) {
 
   function draw(dt) {
     need = false;
-    if (!reduce) f.time += dt;
+    // A place may slow the scene (f.slow, 0..1) while it is on screen.
+    speedNow += (f.slow - speedNow) * (1 - Math.exp(-dt * 2));
+    if (!reduce) f.time += dt * speedNow;
     f.dt = dt;
     var y = window.scrollY, leap = Math.abs(y - ys) > vh * 0.9;
     ys = reduce || leap ? y : ys + (y - ys) * (1 - Math.exp(-dt * 6));
@@ -264,6 +303,7 @@ export function createWorld(K, opts) {
     }
     f.fogD = sky.P.fd;
     f.pxScale = pxScale;
+    f.slow = 1;
     nreq = 0;
     for (var name in places) {
       var e = places[name], p = e.place;
@@ -278,6 +318,12 @@ export function createWorld(K, opts) {
     sky.apply(camera, f.time, reduce);
     gl.setClearColor(sky.clear);
     assignLights();
+    var nearGround = 1 - smooth(9, 16, camera.position.y), inStory = (seg.a && seg.a.name === 'story' && !seg.b) ? 0 : 1;
+    var day = 1 - smooth(0.35, 0.55, sky.P.dark);
+    AU.uTime.value = f.time; AU.uScale.value = pxScale; AU.uFogD.value = f.fogD * 0.5; AU.uCam.value.copy(camera.position);
+    AU.uDay.value = override ? 0 : day * nearGround * inStory;
+    AU.uNightK.value = override ? 0 : (1 - day) * nearGround * inStory;
+    ambient.visible = AU.uDay.value + AU.uNightK.value > 0.01;
     TU.uTime.value = f.time; TU.uScale.value = pxScale; TU.uFogD.value = f.fogD * 0.5;
     TU.uCam.value.copy(camera.position);
     TU.uAmt.value = f.travel * (override ? 0 : f.petals || 1);

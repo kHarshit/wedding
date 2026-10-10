@@ -8,9 +8,9 @@
  * mandap at z = -29). Beyond the field a level valley holds the
  * celebrations, one after another: the Haldi courtyard of the groom's home,
  * the Baraat's lamp-lit avenue to the hall gate, and the hall itself; past
- * them, the late-night courtyard that carries the closing sections until
- * Phase 4. The land is the story's own ground and colours, flattened where
- * these places stand.
+ * them, the midnight pavilion by its pool (the RSVP). East of the estate,
+ * across the fields, the pin for the venue (the Venue's night map). The land
+ * is the story's own ground and colours, flattened where these places stand.
  */
 import { THREE, col, smooth } from './lib.js';
 
@@ -23,7 +23,9 @@ export var STORY = {
 // runs from z = 0 back to z = -DEPTH (local), HALF wide either side.
 export var COURT = { HALF: 15, DEPTH: 46, WALL: 6.2 };
 export var COURT_DAWN = { x: 0, z: 128 };
-export var COURT_MORNING = { x: 0, z: -232 };
+export var COURT_MORNING = { x: 0, z: -232 };    // (the footprint the pavilion stands in)
+export var PAVILION = { x: 0, z: -232 };         // the pool's near edge; the pavilion is at z = -252
+export var PIN = { x: 104, z: -168 };            // the venue's pin on the night map
 // The celebrations (each place's origin; see places/haldi.js, baraat.js, hall.js).
 export var HALDI = { x: 0, z: -84 };       // the courtyard's front wall; it runs back to z = -110
 export var BARAAT = { x: 0, z: -126 };     // the avenue's start; the hall gate stands at z = -166
@@ -62,12 +64,12 @@ export function groundH(x, z) {
 var PATCH = [col('#d8b42c'), col('#e2c43a'), col('#6f8f35'), col('#86a040'), col('#9c8456')];
 function hash2(a, b) { var h = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return h - Math.floor(h); }
 function patchwork(x, z) {
-  if (z > -42 || z < -232) return null;
+  if (z > -42 || z < -380) return null;
   // Keep the celebrations' own ground (the courts, the avenue, the hall lawn).
   if (Math.abs(x) < 15 && z < HALDI.z + 4 && z > HALDI.z - 30) return null;
   if (Math.abs(x) < 13 && z < BARAAT.z + 6 && z > BARAAT.z - 44) return null;
   if (Math.abs(x) < 23 && z < HALL.z + 18 && z > HALL.z - 36) return null;
-  if (Math.abs(x) < 16 && z < COURT_MORNING.z + 12) return null;
+  if (Math.abs(x) < 15 && z < PAVILION.z + 6 && z > PAVILION.z - 34) return null;   // the pavilion's garden
   var cx = Math.floor(x / 15 + 0.3 * Math.sin(z * 0.05)), cz = Math.floor(z / 12);
   var h = hash2(cx, cz);
   return PATCH[Math.min(PATCH.length - 1, (h * PATCH.length) | 0)];
@@ -75,7 +77,8 @@ function patchwork(x, z) {
 
 export function buildLand(small) {
   var H = STORY, gSeg = small ? 90 : 140;
-  var gGeo = new THREE.PlaneGeometry(460, 460, gSeg, gSeg).rotateX(-Math.PI / 2).translate(0, 0, -70);
+  // Deep enough south that the dawn's climb out of the pavilion sees fields, not the land's edge.
+  var gGeo = new THREE.PlaneGeometry(460, 540, gSeg, Math.round(gSeg * 540 / 460)).rotateX(-Math.PI / 2).translate(0, 0, -110);
   var gp = gGeo.attributes.position, gCols = new Float32Array(gp.count * 3);
   var cGrass = col('#56603a'), cField = col('#3e4824'), cPath = col('#8a6a48'), cYard = col('#a07e5a'), cTmp = new THREE.Color();
   for (var i = 0; i < gp.count; i++) {
@@ -93,7 +96,7 @@ export function buildLand(small) {
     // Beyond the story's field, a patchwork of mustard in flower, young
     // wheat and fallow ground, as the celebrations' valley is seen from the air.
     var pf = patchwork(x, z);
-    if (pf) cTmp.lerp(pf, 0.85);
+    if (pf) cTmp.copy(pf);
     var n = 0.9 + 0.1 * Math.sin(x * 1.7 + z * 0.9) * Math.sin(z * 2.3 - x * 0.4);
     gCols[i * 3] = cTmp.r * n; gCols[i * 3 + 1] = cTmp.g * n; gCols[i * 3 + 2] = cTmp.b * n;
   }

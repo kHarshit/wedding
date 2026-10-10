@@ -3,6 +3,14 @@
   "use strict";
   var F=document.getElementById("flutter");
   if(!F)return;
+  // While the 3D world is likely (html.world-likely), it brings its own
+  // butterflies: start only if it falls back to the cream page.
+  var root=document.documentElement;
+  if(root.classList.contains("world-likely")){
+    var mo=new MutationObserver(function(){if(!root.classList.contains("world-likely")){mo.disconnect();start();}});
+    mo.observe(root,{attributes:true,attributeFilter:["class"]});
+  } else start();
+  function start(){
   var reduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches;
   if(reduced)return;
   var THEMES=[
@@ -97,8 +105,6 @@
   var last=performance.now();
   var raf;
   function frame(t){
-    // The 3D world (js/world) brings its own creatures; rest while it runs.
-    if(document.body.classList.contains("world-on")){last=t;raf=requestAnimationFrame(frame);return;}
     var dt=Math.min(.05,(t-last)/1000);last=t;
     var W=window.innerWidth,H=window.innerHeight;
     list.forEach(function(e){
@@ -165,4 +171,5 @@
   window.addEventListener("touchend",te,{passive:true});
   window.addEventListener("resize",function(){s=focusScale()});
   raf=requestAnimationFrame(frame);
+  }
 })();

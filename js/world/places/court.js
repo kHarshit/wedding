@@ -1,8 +1,7 @@
 /*
- * The courtyard behind the palace doors: a stand-in for the places Phase 2
- * and 3 will build. The same court is laid out twice: at dawn, just inside
- * the gate, for the sections before Our Story, and in the morning, beyond
- * the mandap, for the sections after it.
+ * The courtyard behind the palace doors, at dawn: the guest arrives here
+ * through the gate, and the shrine stands in its pavilion (shrine.js). (The
+ * builder also lays the court out without the dawn's lamps, as 'morning'.)
  *
  * Sandstone arcades lit from within run down both sides; a stepped pool
  * with floating diyas, lotuses and petals fills the middle; a brass lamp
@@ -14,40 +13,7 @@ import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, no
          Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, PETAL_F, diyaBowls, broadleaf, ashoka, treeMesh,
          rangoliTexture, rangoli, pool, worldUV, stoneTexture, onionDome } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
-import { keyed, cols } from '../timeline.js';
 import { COURT, groundH } from '../land.js';
-
-var C = cols(['px', 'py', 'pz', 'tx', 'ty', 'tz', 'tod', 'mist']);
-// Camera keys over the stop (0..1), local coordinates.
-var KEYS = {
-  //            at   px    py    pz      tx   ty    tz     tod    mist
-  morning: [
-    [0,           0,   10.5, -5.5,    0,   1.0,  -27,   30.3,  0.15],
-    [0.18,        0,   3.4,  -9.5,    0,   2.2,  -32,   31.2,  0],
-    [0.6,         2.6, 2.4,  -15,     0,   2.0,  -36,   32.6,  0],
-    [1,           0,   2.1,  -19.5,   0,   3.2,  -44,   33.6,  0]
-  ],
-  // After the reception: the same court late at night, every lamp lit
-  // (it carries the venue, RSVP and footer until Phase 4 gives them places).
-  late: [
-    [0,           0,   9.5,  -5.5,    0,   1.0,  -27,   22.4,  0.1],
-    [0.18,        0,   3.4,  -9.5,    0,   2.2,  -32,   22.7,  0],
-    [0.6,         2.6, 2.4,  -15,     0,   2.0,  -36,   23.2,  0],
-    [1,           0,   2.1,  -19.5,   0,   3.2,  -44,   23.6,  0]
-  ]
-};
-
-// The camera for a court variant at its origin o, for the timeline.
-export function courtPose(variant, o) {
-  var sample = keyed(KEYS[variant]);
-  return function (u, out) {
-    var row = sample(u);
-    out.pos.set(o.x + row[C.px], row[C.py], o.z + row[C.pz]);
-    out.tgt.set(o.x + row[C.tx], row[C.ty], o.z + row[C.tz]);
-    out.tod = row[C.tod];
-    out.mist = row[C.mist];
-  };
-}
 
 // Sandstone tiles on a canvas; n x n tiles per repeat.
 function tileTexture(n, base, grout, spread, seed, inlay) {
@@ -445,7 +411,7 @@ export function build(W, opts) {
   function frame(f) {
     var P = f.P, time = f.time;
     // Lamps burn through dawn and go out as the morning brightens.
-    var lit = dawn ? 1 - smooth(7.0, 9.5, (f.tod % 24 + 24) % 24) * 0.7 : variant === 'late' ? 1 : 0;
+    var lit = dawn ? 1 - smooth(7.0, 9.5, (f.tod % 24 + 24) % 24) * 0.7 : 0;
     U.uTime.value = time; U.uScale.value = f.pxScale; U.uFogD.value = f.fogD * 0.5;
     U.uOn.value = lit; U.uGlow.value = 1;
     U.uLit.value = clamp(P.hi * 0.62 + 0.15, 0.4, 1.15);

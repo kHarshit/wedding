@@ -148,15 +148,33 @@ function start() {
                                   span: [0.75, 0.75], pose: function (u, out, f) { celebPose('baraat', u, out, f); } });
     var hall = W.timeline.add({ name: 'hall', places: ['hall'], arc: 1.2, tilt: 0, petals: 0.8,
                                 span: [0.75, 0.75], pose: function (u, out, f) { celebPose('hall', u, out, f); } });
-    var morning = W.timeline.add({ name: 'morning', places: ['morning'], arc: 8, mist: 0.15, pose: Court.courtPose('late', L.COURT_MORNING) });
+    // The closing: high over the estate for the Venue's night map, down to the
+    // midnight pavilion for the RSVP, and up again into the dawn for the footer.
+    var venue = W.timeline.add({ name: 'venue', places: ['estate'], span: [0.6, 0.35], via: function (f, P, T) { P.set(2, 78, -176); T.set(f.aspect < 0.9 ? 18 : 34, 0, -198); },
+                                 pose: function (u, out, f) { closePose('map', u, out, f); } });
+    var rsvp = W.timeline.add({ name: 'rsvp', places: ['pavilion', 'hall'], span: [0.55, 0.85],
+                                via: function (f, P, T) { P.set(26, 38, -206); T.set(2, 4, -252); },
+                                pose: function (u, out, f) { closePose('pavilion', u, out, f); } });
+    var dawn = W.timeline.add({ name: 'dawn', places: ['estate', 'pavilion', 'hall'], span: [0.85, 0], through: 30.2, rays: 1, mist: -0.6,
+                                via: function (f, P, T) { P.set(14, 78, -256); T.set(70, f.aspect < 0.9 ? 40 : 24, -300); },
+                                pose: function (u, out, f) { closePose('dawn', u, out, f); } });
     W.define('gate', function () { var p = Gate.build(W, { origin: L.COURT_DAWN }); p.stop = shrine; return p; });
     W.define('dawn', function () { var p = Court.build(W, { variant: 'dawn', origin: L.COURT_DAWN }); p.stop = shrine; return p; });
     W.define('shrine', function () { var p = Shrine.build(W, { origin: L.COURT_DAWN }); p.stop = shrine; return p; });
     // Later places load their own code, and build when the browser is idle.
     W.define('homes', function () { return homesMod.then(function (H) { return idle(1500).then(function () { var p = H.build(W); p.stop = homes; return p; }); }); });
     W.define('terrace', function () { return terraceMod.then(function (T) { return idle(1500).then(function () { var p = T.build(W); p.stop = terrace; return p; }); }); });
-    W.define('morning', function () {
-      return idle(1500).then(function () { var p = Court.build(W, { variant: 'late', origin: L.COURT_MORNING }); p.stop = morning; return p; });
+    W.define('estate', function () {
+      return import('./places/estate.js').then(function (E2) {
+        closePoses.map = E2.mapPose; closePoses.dawn = E2.dawnPose;
+        return idle(1500).then(function () { var p = E2.build(W); p.stop = venue; return p; });
+      });
+    });
+    W.define('pavilion', function () {
+      return import('./places/pavilion.js').then(function (P2) {
+        closePoses.pavilion = P2.pose;
+        return idle(1500).then(function () { var p = P2.build(W); p.stop = rsvp; return p; });
+      });
     });
     [['haldi', haldi], ['baraat', baraat], ['hall', hall]].forEach(function (d) {
       W.define(d[0], function () {
@@ -189,6 +207,12 @@ function start() {
   var storyModule = null, homesMod = null, terraceMod = null;
   // Each celebration's camera comes with its code; until then a stand-in on its axis.
   var celebPoses = {}, CELEB_Z = { haldi: -92, baraat: -140, hall: -198 }, CELEB_TOD = { haldi: 9.2, baraat: 18.4, hall: 21.8 };
+  var closePoses = {};
+  var CLOSE = { map: [[50, 180, -92], [56, 0, -162], 23.0, -0.6], pavilion: [[0, 2.3, -228], [0, 2.3, -250], 24.0, 0], dawn: [[-62, 32, 40], [28, 0, -72], 30.4, -0.7] };
+  function closePose(name, u, out, f) {
+    if (closePoses[name]) return closePoses[name](u, out, f);
+    var c = CLOSE[name]; out.pos.fromArray(c[0]); out.tgt.fromArray(c[1]); out.tod = c[2]; out.mist = c[3];
+  }
   function celebPose(name, u, out, f) {
     if (celebPoses[name]) return celebPoses[name](u, out, f);
     out.pos.set(0, 3, CELEB_Z[name] + 12); out.tgt.set(0, 3, CELEB_Z[name] - 10); out.tod = CELEB_TOD[name]; out.mist = 0;
