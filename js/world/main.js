@@ -26,6 +26,30 @@
  * when the browser is idle; the morning court as the camera nears it.
  */
 function mq(q) { return !!(window.matchMedia && window.matchMedia(q).matches); }
+function wait(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
+// Fetching with retries: a patchy phone connection may drop a file now and
+// then. Each file is fetched (and retried) before it is imported, because a
+// failed import is remembered for its URL and can't simply be repeated.
+function fetchRetry(url, n) {
+  return fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + url); return r.blob(); })
+    .catch(function (e) { if (n >= 3) throw e; return wait(400 * (n + 1) * (n + 1)).then(function () { return fetchRetry(url, n + 1); }); });
+}
+// A later place's module (it only imports modules that are already loaded):
+// fetch it with retries, import it, and if the import still fails, import it
+// again under another name.
+var needed = {};
+function need(path) {
+  if (needed[path]) return needed[path];
+  var url = new URL(path, import.meta.url).href, tries = 0;
+  var p = needed[path] = fetchRetry(url, 0).catch(function () {}).then(function attempt() {
+    return import(tries ? url + '?retry=' + tries : url).catch(function (e) {
+      if (++tries > 2) throw e;
+      return wait(600 * tries).then(function () { return fetchRetry(url + '?retry=' + tries, 1).catch(function () {}); }).then(attempt);
+    });
+  });
+  p.catch(function () { if (needed[path] === p) delete needed[path]; });
+  return p;
+}
 // The invitation's two families, each in a half of its own, so each can
 // rest before its own home (css/world.css lays them out); put back on fallback.
 function splitInvitation(on) {
@@ -130,10 +154,14 @@ function start() {
     if (pending) { var p = pending; pending = null; p.fallback(); }
   }
 
-  Promise.all([
-    import('../immersive/kit.js'), import('./engine.js'), import('./land.js'),
-    import('./places/gate.js'), import('./places/court.js'), import('./places/shrine.js')
-  ]).then(function (m) {
+  // The gate's files are already downloading (with retries) from index.html's
+  // head; import once they are in the cache.
+  Promise.resolve(window.__worldWarm).catch(function () {}).then(function () {
+    return Promise.all([
+      import('../immersive/kit.js'), import('./engine.js'), import('./land.js'),
+      import('./places/gate.js'), import('./places/court.js'), import('./places/shrine.js')
+    ]);
+  }).then(function (m) {
     if (gaveUp) return null;
     var K = m[0], E = m[1], L = m[2], Gate = m[3], Court = m[4], Shrine = m[5];
     W = E.createWorld(K, { reduceMotion: reduceMotion });
@@ -179,20 +207,20 @@ function start() {
     W.define('homes', function () { return homesMod.then(function (H) { return idleFor('homes').then(function () { var p = H.build(W); p.stop = homes; return p; }); }); });
     W.define('terrace', function () { return terraceMod.then(function (T) { return idleFor('terrace').then(function () { var p = T.build(W); p.stop = terrace; return p; }); }); });
     W.define('estate', function () {
-      return import('./places/estate.js').then(function (E2) {
+      return need('./places/estate.js').then(function (E2) {
         closePoses.map = E2.mapPose; closePoses.dawn = E2.dawnPose;
         return idleFor('estate').then(function () { var p = E2.build(W); p.stop = venue; return p; });
       });
     });
     W.define('pavilion', function () {
-      return import('./places/pavilion.js').then(function (P2) {
+      return need('./places/pavilion.js').then(function (P2) {
         closePoses.pavilion = P2.pose;
         return idleFor('pavilion').then(function () { var p = P2.build(W); p.stop = rsvp; return p; });
       });
     });
     [['haldi', haldi], ['baraat', baraat], ['hall', hall]].forEach(function (d) {
       W.define(d[0], function () {
-        return import('./places/' + d[0] + '.js').then(function (P) {
+        return need('./places/' + d[0] + '.js').then(function (P) {
           celebPoses[d[0]] = P.pose;
           return idleFor(d[0]).then(function () { var p = P.build(W); p.stop = d[1]; return p; });
         });
@@ -212,7 +240,7 @@ function start() {
     body.classList.add('world-on', 'world-gate');
     if (themeMeta) themeMeta.setAttribute('content', '#1a1020');
     // Fetch the next places' code while the guest reads the names.
-    storyModule = import('./places/story.js');
+    storyModule = need('./places/story.js');
     storyModule.catch(function () {});
     fetchLater();
     if (pending) { var p = pending; pending = null; document.getElementById('intro').classList.remove('world-wait'); openDoors(p.done); }
@@ -235,9 +263,9 @@ function start() {
   var homesSpan = function () { return [0.3, 0.15]; };
   var terracePose = function (u, out) { out.pos.set(0, 8.8, 53); out.tgt.set(0, 6.5, 18); out.tod = 17; out.mist = 0; };
   function fetchLater() {
-    homesMod = import('./places/homes.js');
+    homesMod = need('./places/homes.js');
     homesMod.then(function (H) { homesPose = H.homesPose; homesSpan = H.homesSpan; if (W) W.poke(); }).catch(function () {});
-    terraceMod = import('./places/terrace.js');
+    terraceMod = need('./places/terrace.js');
     terraceMod.then(function (T) { terracePose = T.terracePose; if (W) W.poke(); }).catch(function () {});
   }
   function afterDoors() {
@@ -248,12 +276,12 @@ function start() {
     // Fetch the rest of the places' code while the guest reads (small, cached),
     // so a fast fling to the end never waits on the network.
     setTimeout(function () {
-      ['haldi', 'baraat', 'hall', 'estate', 'pavilion'].forEach(function (n) { import('./places/' + n + '.js').catch(function () {}); });
+      ['haldi', 'baraat', 'hall', 'estate', 'pavilion'].forEach(function (n) { need('./places/' + n + '.js').catch(function () {}); });
     }, 2500);
     // Mount the story once the page has faded in; its scene builds when idle.
     setTimeout(function () {
       if (!W || W.dead()) return;
-      (storyModule || import('./places/story.js')).then(function (S) {
+      (storyModule || need('./places/story.js')).then(function (S) {
         if (W.dead()) return;
         var m = S.mount(W);
         if (!m) return;

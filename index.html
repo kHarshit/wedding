@@ -43,12 +43,21 @@
   if(!g)return;
   var x=g.getExtension("WEBGL_lose_context");if(x)x.loseContext();
   document.documentElement.classList.add("world-likely");
-  // Start fetching the gate's modules now, in parallel, rather than one by
-  // one as each import is discovered (only when the 3D gate will be used).
-  ["https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js","js/immersive/kit.js","js/world/main.js","js/world/engine.js",
+  // Start downloading the gate's modules now, in parallel, into the browser's
+  // cache. fetch() rather than modulepreload: a failed modulepreload is
+  // remembered and makes the later import fail too, while a failed fetch can
+  // simply be asked for again (a patchy phone connection may drop one).
+  // js/world/main.js waits for this before importing.
+  var get=function(h,n){
+    return fetch(h).then(function(r){if(!r.ok)throw new Error(r.status);return r.blob();}).catch(function(e){
+      if(n>=3)throw e;
+      return new Promise(function(ok){setTimeout(ok,400*(n+1)*(n+1));}).then(function(){return get(h,n+1);});
+    });
+  };
+  window.__worldWarm=Promise.all(["https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js","js/immersive/kit.js","js/world/engine.js",
    "js/world/lib.js","js/world/sky.js","js/world/land.js","js/world/timeline.js","js/world/places/gate.js","js/world/places/court.js",
-   "js/world/places/shrine.js"].forEach(function(h){var l=document.createElement("link");l.rel="modulepreload";l.href=h;
-     if(/^https:/.test(h))l.crossOrigin="anonymous";document.head.appendChild(l);});
+   "js/world/places/shrine.js"].map(function(h){return get(h,0);}));
+  window.__worldWarm.catch(function(){});
 }catch(e){}})();
 </script>
 </head>
@@ -502,7 +511,9 @@
 <script src="js/scroll-cue.js"></script>
 <script src="js/rsvp.js"></script>
 <script src="js/skip-rsvp.js"></script>
-<script type="module" src="js/world/main.js"></script>
+<!-- If the world's entry file fails to arrive, ask once more under another name
+     (a failed module URL is remembered); if that fails too, the cream site stays. -->
+<script type="module" src="js/world/main.js" onerror="var s=document.createElement('script');s.type='module';s.src='js/world/main.js?retry=1';s.onerror=function(){document.documentElement.classList.remove('world-likely');};document.body.appendChild(s);"></script>
 <script nomodule>document.documentElement.classList.remove("world-likely");</script>
 </body>
 </html>
