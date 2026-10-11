@@ -542,6 +542,202 @@ export function onionDome(R, y0, color, seg) {
   return merge(parts);
 }
 
+// ── A Nagara temple tower (shikhara) ─────────────────────────────────────
+// The plan is a stepped cross of half-width 1: the central projection
+// (bhadra), the ones beside it (pratiratha) and the corners (karna), with
+// narrow recesses between them at the finest detail. Each step is
+// [outer x, depth, carved motifs on this half-face]; 0 motifs is plain.
+var RATHA = [
+  [[0.38, 1, 1], [0.86, 0.86, 1]],
+  [[0.3, 1, 1], [0.6, 0.93, 1], [0.86, 0.86, 1]],
+  [[0.28, 1, 1], [0.34, 0.885, 0], [0.58, 0.94, 1], [0.64, 0.83, 0], [0.86, 0.86, 1]]
+];
+// The plan's outline as edges [x0, z0, x1, z1, u1], all four faces: ratha
+// faces get whole motifs (u 0..u1), the returns between them plain stone.
+var planCache = {};
+function rathaPlan(detail) {
+  if (planCache[detail]) return planCache[detail];
+  var steps = RATHA[detail], half = [], face = [], out = [], k, x0 = 0;
+  for (k = 0; k < steps.length; k++) { half.push([x0, steps[k][0], steps[k][1], steps[k][2]]); x0 = steps[k][0]; }
+  // Left to right across the face: the mirrored half, then the half.
+  var segs = half.slice().reverse().map(function (s) { return [-s[1], -s[0], s[2], s[3]]; }).concat(half);
+  for (k = 0; k < segs.length; k++) {
+    var s = segs[k];
+    if (k && segs[k - 1][2] !== s[2]) face.push([s[0], segs[k - 1][2], s[0], s[2], 0.12]);
+    face.push([s[0], s[2], s[1], s[2], s[3] || 0.12]);
+  }
+  // The four faces: (x, d) on +z, then +x, -z and -x.
+  [[1, 0, 0, 1], [0, 1, -1, 0], [-1, 0, 0, -1], [0, -1, 1, 0]].forEach(function (m) {
+    face.forEach(function (e) {
+      out.push([e[0] * m[0] + e[1] * m[1], e[0] * m[2] + e[1] * m[3], e[2] * m[0] + e[3] * m[1], e[2] * m[2] + e[3] * m[3], e[4]]);
+    });
+  });
+  return (planCache[detail] = out);
+}
+// Triangles with flat normals, vertex colours and uvs, gathered into one geometry.
+function TriBuf() { this.p = []; this.n = []; this.c = []; this.u = []; }
+var tv1 = null, tv2 = null;
+TriBuf.prototype.tri = function (a, b, c, ua, ub, uc, ca, cb, cc) {
+  tv1 = tv1 || new THREE.Vector3(); tv2 = tv2 || new THREE.Vector3();
+  tv1.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]); tv2.set(c[0] - a[0], c[1] - a[1], c[2] - a[2]);
+  tv1.cross(tv2).normalize();
+  this.p.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
+  for (var i = 0; i < 3; i++) this.n.push(tv1.x, tv1.y, tv1.z);
+  this.u.push(ua[0], ua[1], ub[0], ub[1], uc[0], uc[1]);
+  this.c.push(ca.r, ca.g, ca.b, cb.r, cb.g, cb.b, cc.r, cc.g, cc.b);
+};
+TriBuf.prototype.geo = function () {
+  var g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(this.p, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(this.n, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(this.c, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(this.u, 2));
+  return g;
+};
+// Loft the plan through rings {y, s (plan scale), v, up, dn}: each band runs
+// from one ring to the next; up / dn are the shade a ring gives the band
+// above / below it (so a cornice's underside can be dark and its top bright).
+function loftPlan(T, plan, rings, B, cx, cz, color, cap) {
+  var ca = new THREE.Color(), cb = new THREE.Color();
+  for (var i = 0; i + 1 < rings.length; i++) {
+    var A = rings[i], Z = rings[i + 1], sa = A.s * B, sz = Z.s * B;
+    ca.copy(color).multiplyScalar(A.up); cb.copy(color).multiplyScalar(Z.dn);
+    for (var k = 0; k < plan.length; k++) {
+      var e = plan[k];
+      var p0 = [cx + e[0] * sa, A.y, cz + e[1] * sa], p1 = [cx + e[2] * sa, A.y, cz + e[3] * sa];
+      var p2 = [cx + e[2] * sz, Z.y, cz + e[3] * sz], p3 = [cx + e[0] * sz, Z.y, cz + e[1] * sz];
+      var u0 = [0, A.v], u1 = [e[4], A.v], u2 = [e[4], Z.v], u3 = [0, Z.v];
+      T.tri(p0, p1, p2, u0, u1, u2, ca, ca, cb);
+      T.tri(p0, p2, p3, u0, u2, u3, ca, cb, cb);
+    }
+  }
+  if (cap) {
+    var R = rings[rings.length - 1], sr = R.s * B, mid = [cx, R.y, cz], pu = [0.04, 0.4];
+    ca.copy(color).multiplyScalar(R.dn);
+    plan.forEach(function (e) { T.tri([cx + e[0] * sr, R.y, cz + e[1] * sr], [cx + e[2] * sr, R.y, cz + e[3] * sr], mid, pu, pu, pu, ca, ca, ca); });
+  }
+}
+// The rekha curve: nearly upright at the foot, rounding in to the shoulder.
+function rekha(h, top) { return top + (1 - top) * Math.pow(1 - Math.pow(h, 1.9), 0.62); }
+// A ribbed cushion (amalaka) of radius R: a lathe with every other rib pressed in.
+function ribbed(R, H, ribs, prof, notch) {
+  var g = new THREE.LatheGeometry((prof || [[0, 0], [0.5, 0], [0.8, 0.1], [0.97, 0.3], [1, 0.5], [0.94, 0.72], [0.74, 0.9], [0.42, 1], [0, 1]])
+    .map(function (p) { return new THREE.Vector2(p[0] * R, p[1] * H); }), ribs * 2);
+  var pos = g.attributes.position;
+  for (var i = 0; i < pos.count; i++) {
+    var col_ = Math.round((Math.atan2(pos.getX(i), pos.getZ(i)) / (Math.PI * 2) + 1) * ribs * 2) % (ribs * 2);
+    if (col_ % 2) { pos.setX(i, pos.getX(i) * (notch || 0.84)); pos.setZ(i, pos.getZ(i) * (notch || 0.84)); }
+  }
+  g = g.toNonIndexed(); g.computeVertexNormals();
+  return g;
+}
+// Plain stone uvs (the motif texture's blank pilaster) for turned pieces.
+function plainUV(g) {
+  var n = g.attributes.position.count, a = new Float32Array(n * 2);
+  for (var i = 0; i < n; i++) { a[i * 2] = 0.04; a[i * 2 + 1] = 0.4; }
+  g.setAttribute('uv', new THREE.BufferAttribute(a, 2));
+  return g;
+}
+// A gold kalash (water pot) with its lid and finial, `k` tall, standing at y.
+export function kalash(k, x, y, z, seg) {
+  var prof = k > 0.6 ? [[0, 0], [0.3, 0], [0.32, 0.04], [0.22, 0.08], [0.34, 0.2], [0.37, 0.3], [0.31, 0.42], [0.15, 0.5], [0.12, 0.54],
+                        [0.24, 0.58], [0.22, 0.62], [0.08, 0.66], [0.13, 0.76], [0.09, 0.86], [0.035, 0.97], [0.014, 1.1], [0, 1.16]]
+                     : [[0, 0], [0.3, 0.02], [0.36, 0.26], [0.18, 0.48], [0.24, 0.58], [0.08, 0.66], [0.12, 0.8], [0.03, 0.98], [0, 1.16]];
+  var g = new THREE.LatheGeometry(prof.map(function (p) { return new THREE.Vector2(p[0] * k, p[1] * k); }), seg || 14);
+  g.computeVertexNormals();
+  return tinted(g.translate(x, y, z), '#ffffff');
+}
+// The motifs carved in every course: a row of small shrines (a niche under
+// a stepped crown, between pilasters) over a band of beads. One motif per
+// u; v runs up a course. Near white, so vertex colours tint it.
+var carvedTex = null;
+export function carvedTexture() {
+  if (carvedTex) return carvedTex;
+  var c = document.createElement('canvas'); c.width = c.height = 256;
+  var x = c.getContext('2d'), r = rng(31);
+  function V(v) { return (1 - v) * 256; }
+  x.fillStyle = '#f7eee4'; x.fillRect(0, 0, 256, 256);
+  // Pilasters either side, each with a fine groove.
+  x.fillStyle = '#fffaf3'; x.fillRect(0, V(0.7), 34, V(0) - V(0.7)); x.fillRect(222, V(0.7), 34, V(0) - V(0.7));
+  x.fillStyle = 'rgba(150,105,80,0.28)'; x.fillRect(16, V(0.64), 3, V(0.06) - V(0.64)); x.fillRect(238, V(0.64), 3, V(0.06) - V(0.64));
+  // The plinth ledge.
+  x.fillStyle = '#e8d6c4'; x.fillRect(34, V(0.1), 188, V(0.04) - V(0.1));
+  x.fillStyle = 'rgba(140,96,72,0.3)'; x.fillRect(34, V(0.04) - 3, 188, 3);
+  // The niche: a shallow recess in a raised frame, warm shadow at its head.
+  x.fillStyle = '#fff6ec'; x.fillRect(58, V(0.46), 140, V(0.1) - V(0.46));
+  var gr = x.createLinearGradient(0, V(0.42), 0, V(0.13));
+  gr.addColorStop(0, '#a87c64'); gr.addColorStop(0.5, '#c29a80'); gr.addColorStop(1, '#d2b098');
+  x.fillStyle = gr;
+  x.beginPath(); x.moveTo(74, V(0.13)); x.lineTo(74, V(0.34)); x.quadraticCurveTo(74, V(0.43), 128, V(0.43)); x.quadraticCurveTo(182, V(0.43), 182, V(0.34)); x.lineTo(182, V(0.13)); x.closePath(); x.fill();
+  // A stepped crown (a little shikhara) over it.
+  [[50, 206, 0.46, 0.5], [66, 190, 0.5, 0.54], [84, 172, 0.54, 0.58], [104, 152, 0.58, 0.62]].forEach(function (t, i) {
+    x.fillStyle = i % 2 ? '#efe0d0' : '#e2ccb6'; x.fillRect(t[0], V(t[3]), t[1] - t[0], V(t[2]) - V(t[3]));
+    x.fillStyle = 'rgba(130,88,64,0.32)'; x.fillRect(t[0], V(t[2]) - 2, t[1] - t[0], 2);
+  });
+  x.fillStyle = '#dcc2aa'; x.beginPath(); x.arc(128, V(0.65), 8, 0, 7); x.fill();
+  // Under the cornice: shadow; on it, a row of beads.
+  x.fillStyle = '#b8957c'; x.fillRect(0, V(0.76), 256, V(0.7) - V(0.76));
+  x.fillStyle = '#f2e6d8'; x.fillRect(0, 0, 256, V(0.76));
+  for (var k = 0; k < 8; k++) {
+    x.fillStyle = '#fffbf5'; x.fillRect(k * 32 + 5, V(0.94), 22, V(0.81) - V(0.94));
+    x.fillStyle = 'rgba(140,96,72,0.3)'; x.fillRect(k * 32 + 5, V(0.81) - 3, 22, 3);
+  }
+  // Grain.
+  for (k = 0; k < 900; k++) { x.fillStyle = r() < 0.5 ? 'rgba(120,90,60,0.07)' : 'rgba(255,250,240,0.1)'; x.fillRect(r() * 256, r() * 256, 1 + r() * 2, 1 + r() * 2); }
+  carvedTex = new THREE.CanvasTexture(c);
+  carvedTex.colorSpace = THREE.SRGBColorSpace; carvedTex.wrapS = carvedTex.wrapT = THREE.RepeatWrapping; carvedTex.anisotropy = 8;
+  return carvedTex;
+}
+// A shikhara: a curving tower of carved courses on the ratha plan, its
+// corners marked by small amalakas at each storey, crowned by a neck, a great
+// ribbed amalaka and a gold kalash. Stone goes into S (with uvs, for
+// carvedTexture()), gold into Gd. o: { x, z, y0, B (half-width), H (curved
+// height), n (courses), detail (0-2 plan), top (shoulder scale), color,
+// bhumi (storey amalakas), kalash (its height), seg }.
+// Returns { top: the amalaka's top, tip: the kalash's tip }.
+export function shikhara(S, Gd, o) {
+  var T = new TriBuf(), plan = rathaPlan(o.detail), color = new THREE.Color(o.color), top = o.top || 0.36;
+  var rings = [], n = o.n, hs = [], i;
+  for (i = 0; i <= n; i++) hs.push(1 - Math.pow(1 - i / n, 1.2));
+  for (i = 0; i < n; i++) {
+    var h0 = hs[i], c = hs[i + 1] - h0;
+    rings.push({ y: o.y0 + h0 * o.H, s: rekha(h0, top), v: 0, up: 0.86, dn: 1.05 });
+    rings.push({ y: o.y0 + (h0 + 0.66 * c) * o.H, s: rekha(h0 + 0.66 * c, top), v: 0.7, up: 0.74, dn: 1.0 });
+    rings.push({ y: o.y0 + (h0 + 0.73 * c) * o.H, s: rekha(h0 + 0.73 * c, top) * 1.05, v: 0.76, up: 1.06, dn: 0.78 });
+  }
+  rings.push({ y: o.y0 + o.H, s: top, v: 1, up: 1, dn: 1.04 });
+  loftPlan(T, plan, rings, o.B, o.x, o.z, color, false);   // (the amalaka covers the top)
+  S.push(T.geo());
+  // Storey amalakas on the corners, every third course.
+  if (o.bhumi) for (i = 3; i < n - 1; i += 4) {
+    var hb = hs[i + 1], sb = rekha(hb, top) * o.B, rb = 0.15 * sb * 1.25;
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (q) {
+      S.push(plainUV(tinted(ribbed(rb, rb * 0.62, 4, [[0.72, 0], [1, 0.45], [0.72, 1], [0, 1]]).translate(o.x + q[0] * 0.78 * sb, o.y0 + hb * o.H - rb * 0.3, o.z + q[1] * 0.78 * sb), color.clone().multiplyScalar(1.04))));
+    });
+  }
+  // The neck, the amalaka, its cap, the kalash.
+  var yT = o.y0 + o.H, rt = top * o.B, ra = rt * 1.3, ha = ra * 0.62;
+  S.push(plainUV(tinted(new THREE.CylinderGeometry(rt * 0.62, rt * 0.7, ha * 0.4, 12).translate(o.x, yT + ha * 0.2, o.z), color.clone().multiplyScalar(0.86))));
+  S.push(plainUV(tinted(ribbed(ra, ha, o.seg || 16, o.seg < 14 ? [[0.5, 0], [0.92, 0.18], [1, 0.48], [0.9, 0.78], [0.5, 0.98], [0, 1]] : null, 0.9).translate(o.x, yT + ha * 0.3, o.z), color.clone().multiplyScalar(1.06))));
+  var yA = yT + ha * 1.3;
+  S.push(plainUV(tinted(new THREE.CylinderGeometry(ra * 0.5, ra * 0.62, ha * 0.18, 12).translate(o.x, yA + ha * 0.09, o.z), color)));
+  var kh = o.kalash || ra * 1.1;
+  Gd.push(kalash(kh, o.x, yA + ha * 0.18, o.z, o.kseg));
+  return { top: yA + ha * 0.18, tip: yA + ha * 0.18 + kh * 1.16 };
+}
+// The tower's base storey (jangha) on the same plan: a moulded foot, a wall
+// carrying one carved niche per ratha, and a deep cornice (kapota).
+export function jangha(S, o) {
+  var T = new TriBuf(), color = new THREE.Color(o.color), y = o.y0, h = o.h;
+  loftPlan(T, rathaPlan(o.detail), [
+    { y: y, s: 1.08, v: 0.76, up: 0.9, dn: 1 }, { y: y + 0.13 * h, s: 1.08, v: 0.98, up: 1.1, dn: 1.04 },
+    { y: y + 0.13 * h, s: 1.0, v: 0.0, up: 0.82, dn: 1 }, { y: y + 0.8 * h, s: 1.0, v: 0.7, up: 0.62, dn: 1.0 },
+    { y: y + 0.86 * h, s: 1.09, v: 0.76, up: 1.06, dn: 0.62 }, { y: y + h, s: 1.04, v: 1, up: 1, dn: 1.04 },
+    { y: y + h, s: 1.0, v: 1, up: 1, dn: 1.1 }
+  ], o.B, o.x, o.z, color, false);
+  S.push(T.geo());
+}
+
 // A stone jaali: eight-pointed stars and crosses cut through sandstone.
 export function jaaliTexture(base) {
   var c = document.createElement('canvas'); c.width = c.height = 256;

@@ -17,14 +17,15 @@ import { tinted, merge } from '../../immersive/kit.js';
 var PZ = -37.2, PH0 = 1.0, PT = 4.6, PW = 3.1;
 var NICHE_Z = PZ - 2.05, MURTI_Y = PH0 + 0.52;
 
-// The camera at the shrine, for the timeline: on landscape screens the
-// shrine sits right of centre (the shloka's card is on the left); on
-// portrait ones it sits low (the card is at the top).
+// The camera at the shrine, for the timeline: far enough back to see the
+// whole temple, from its steps to the flag on its tower. On landscape
+// screens it sits right of centre (the shloka is on the left); on portrait
+// ones it sits low, the tower's flag below the shloka at the top.
 export function shrinePose(o) {
   return function (u, out, f) {
     var port = smooth(1.25, 0.6, f.aspect);
-    out.pos.set(o.x + lerp(0.5, 0, port), lerp(2.45, 2.2, port), o.z + lerp(-25.2, -24.6, port));
-    out.tgt.set(o.x + lerp(-2.0, 0, port), lerp(3.0, 4.2, port), o.z + PZ - 0.3);
+    out.pos.set(o.x + lerp(0.6, 0, port), lerp(2.5, 2.2, port), o.z + lerp(-19.6, -15.8, port));
+    out.tgt.set(o.x + lerp(-2.9, 0, port), lerp(6.4, 9.5, port), o.z + PZ);
     out.tod = 6.2;
     out.mist = 0;
   };

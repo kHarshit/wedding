@@ -5,13 +5,14 @@
  *
  * Sandstone arcades lit from within run down both sides; a stepped pool
  * with floating diyas, lotuses and petals fills the middle; a brass lamp
- * tower (deepstambh) stands before a domed pavilion at the far end; marigold
- * garlands and fairy lights are strung across. Local coordinates: the
- * gateway is at the origin, the court runs back to z = -DEPTH.
+ * tower (deepstambh) stands before a pavilion crowned by a temple tower
+ * (shikhara) at the far end; marigold garlands and fairy lights are strung
+ * across. Local coordinates: the gateway is at the origin, the court runs
+ * back to z = -DEPTH.
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, archAt, pointedArch, notchShape, shiftPts, swag, groundShade,
          Garlands, PointSet, pointKit, GLOW_F, HALO_F, FLAME_F, PETAL_F, diyaBowls, broadleaf, ashoka, treeMesh,
-         rangoliTexture, rangoli, pool, worldUV, stoneTexture, onionDome , Q, tag } from '../lib.js';
+         rangoliTexture, rangoli, pool, worldUV, stoneTexture, mergeUV, shikhara, jangha, kalash, carvedTexture, Q, tag } from '../lib.js';
 import { tinted, merge, softSprite } from '../../immersive/kit.js';
 import { COURT, groundH } from '../land.js';
 
@@ -197,21 +198,82 @@ export function build(W, opts) {
   });
   box(g, -PW - 0.6, PW + 0.6, PT, PT + 0.18, PZ - PW - 0.6, PZ + PW + 0.6, PAL.red);
   box(g, -PW - 0.35, PW + 0.35, PT + 0.18, PT + 0.7, PZ - PW - 0.35, PZ + PW + 0.35, PAL.wall2);
-  for (mx = -PW - 0.2; mx <= PW + 0.21; mx += 0.5) {
-    box(g, mx - 0.1, mx + 0.1, PT + 0.7, PT + 0.95, PZ + PW + 0.2, PZ + PW + 0.4, PAL.trim);
-    box(g, mx - 0.1, mx + 0.1, PT + 0.7, PT + 0.95, PZ - PW - 0.4, PZ - PW - 0.2, PAL.trim);
-  }
-  // The great dome on a drum, a lotus band and a finial; chhatris at the corners.
-  g.push(tinted(new THREE.CylinderGeometry(2.3, 2.4, 0.9, 20).translate(0, PT + 1.15, PZ), PAL.wall2));
-  g.push(tinted(new THREE.CylinderGeometry(2.55, 2.55, 0.16, 20).translate(0, PT + 1.62, PZ), PAL.trim));
-  g.push(onionDome(2.2, PT + 1.7, PAL.dome, 24).translate(0, 0, PZ));
+  // A carved balustrade (vedika) round the roof: posts under a rail.
+  var RE = PW + 0.25, RY = PT + 0.7, step = Q.small ? 0.62 : 0.42;
+  [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+    for (var t = -RE + 0.2; t <= RE - 0.19; t += step) {
+      var px = d[0] ? d[0] * RE : t, pz = PZ + (d[1] ? d[1] * RE : t);
+      if (Math.abs(t) > PW - 0.6) continue;                  // the chhatris stand at the corners
+      box(g, px - 0.07, px + 0.07, RY, RY + 0.3, pz - 0.07, pz + 0.07, PAL.trim);
+    }
+    if (d[0]) box(g, d[0] * RE - 0.1, d[0] * RE + 0.1, RY + 0.3, RY + 0.38, PZ - PW + 0.55, PZ + PW - 0.55, PAL.trim);
+    else box(g, -PW + 0.55, PW - 0.55, RY + 0.3, RY + 0.38, PZ + d[1] * RE - 0.1, PZ + d[1] * RE + 0.1, PAL.trim);
+  });
+
+  // ── The temple tower over the sanctum ─────────────────────────────────
+  // A Nagara shikhara of carved courses on a stepped-cross plan, rising
+  // from a niched base storey; subsidiary towers (urushringas) climb its
+  // front and sides, and the corner chhatris have stepped pyramidal roofs.
+  // Stone in its own mesh (the carved-course texture), the gold in another.
+  var SK = [], GD = [], SB = 2.1, SY = PT + 0.7, JH = 0.95, SH0 = SY + JH, SHH = 5.5;
+  var SAND = '#ffe0cc', BASE = '#f6d0b8';
+  jangha(SK, { x: 0, z: PZ, y0: SY, h: JH, B: SB, detail: Q.small ? 1 : 2, color: BASE });
+  var crown = shikhara(SK, GD, { x: 0, z: PZ, y0: SH0, B: SB, H: SHH, n: Q.small ? 10 : 12, detail: Q.small ? 1 : 2, top: 0.36,
+                                 color: SAND, bhumi: !Q.small, seg: Q.small ? 16 : 20, kalash: 0.95, kseg: Q.small ? 10 : 14 });
+  // An urushringa leaning on the front and both sides (the back is never seen close).
+  [[0, 1], [1, 0], [-1, 0]].forEach(function (d) {
+    var ud = SB + 0.02;
+    jangha(SK, { x: d[0] * ud, z: PZ + d[1] * ud, y0: SY, h: JH, B: 0.98, detail: Q.small ? 0 : 1, color: BASE });
+    shikhara(SK, GD, { x: d[0] * ud, z: PZ + d[1] * ud, y0: SH0, B: 0.98, H: 3.0, n: Q.small ? 4 : 6, detail: Q.small ? 0 : 1, top: 0.36,
+                       color: SAND, bhumi: false, seg: Q.small ? 8 : 12, kalash: 0.45, kseg: 8 });
+  });
+  // The flag (dhvaja) on its pole beside the kalash.
+  var FX = 0.42, FY0 = crown.top - 0.1, FY1 = crown.tip + 1.0;
+  GD.push(tinted(new THREE.CylinderGeometry(0.022, 0.03, FY1 - FY0, 5).translate(FX, (FY0 + FY1) / 2, PZ), '#ffffff'));
+  GD.push(tinted(new THREE.SphereGeometry(0.05, 6, 4).translate(FX, FY1 + 0.03, PZ), '#ffffff'));
+  // Chhatris at the roof's corners: four posts, a slab, a stepped pyramid
+  // (phamsana) roof, a bell-shaped cap and a kalash.
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (c) {
     var cx = c[0] * (PW + 0.05), cz = PZ + c[1] * (PW + 0.05), y0 = PT + 0.7;
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (q) { box(g, cx + q[0] * 0.38 - 0.05, cx + q[0] * 0.38 + 0.05, y0, y0 + 0.75, cz + q[1] * 0.38 - 0.05, cz + q[1] * 0.38 + 0.05, PAL.trim); });
-    box(g, cx - 0.55, cx + 0.55, y0 + 0.75, y0 + 0.86, cz - 0.55, cz + 0.55, PAL.trim);
-    g.push(tinted(new THREE.SphereGeometry(0.48, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.15, 1).translate(cx, y0 + 0.86, cz), PAL.dome));
-    g.push(tinted(new THREE.ConeGeometry(0.05, 0.3, 5).translate(cx, y0 + 1.55, cz), '#d9a441'));
+    box(g, cx - 0.58, cx + 0.58, y0 + 0.75, y0 + 0.86, cz - 0.58, cz + 0.58, PAL.trim);
+    var ty = y0 + 0.86;
+    for (var tk = 0; tk < 4; tk++) {
+      var w0 = 0.56 - tk * 0.12, th = 0.17;
+      g.push(tinted(new THREE.CylinderGeometry(w0 * 0.74 * Math.SQRT2, w0 * Math.SQRT2, th, 4).rotateY(Math.PI / 4).translate(cx, ty + th / 2, cz), tk % 2 ? PAL.trim : '#ecc0a0'));
+      box(g, cx - w0 - 0.03, cx + w0 + 0.03, ty - 0.02, ty + 0.03, cz - w0 - 0.03, cz + w0 + 0.03, PAL.trim);
+      ty += th;
+    }
+    g.push(tinted(new THREE.LatheGeometry([[0, 0], [0.16, 0], [0.18, 0.05], [0.13, 0.14], [0.06, 0.2], [0, 0.21]].map(function (p) { return new THREE.Vector2(p[0], p[1]); }), 8).translate(cx, ty, cz), PAL.trim));
+    GD.push(kalash(0.3, cx, ty + 0.19, cz, 8));
   });
+  var skGeo = mergeUV(SK);
+  var shikharaMesh = new THREE.Mesh(skGeo, new THREE.MeshLambertMaterial({ vertexColors: true, map: carvedTexture() }));
+  var goldMesh = new THREE.Mesh(merge(GD), new THREE.MeshPhongMaterial({ vertexColors: true, color: '#e2ac46', specular: '#fff0c0', shininess: 70, emissive: '#4a2a06' }));
+  group.add(shikharaMesh, goldMesh);
+  // The saffron flag: a pennant that ripples (rebuilt each frame; 14 triangles).
+  var FN = 7, FL = 1.05, FHt = 0.55;
+  var flagGeo = new THREE.BufferGeometry(), fpos = new Float32Array((FN + 1) * 2 * 3), fidx = [], fcol = [];
+  for (var fk = 0; fk < FN; fk++) { var a0 = fk * 2; fidx.push(a0, a0 + 2, a0 + 1, a0 + 1, a0 + 2, a0 + 3); }
+  for (fk = 0; fk <= FN; fk++) { var fc = col('#ff8a1e').lerp(col('#f0521a'), fk / FN); fcol.push(fc.r, fc.g, fc.b, fc.r, fc.g, fc.b); }
+  flagGeo.setAttribute('position', new THREE.BufferAttribute(fpos, 3));
+  flagGeo.setAttribute('color', new THREE.Float32BufferAttribute(fcol, 3));
+  flagGeo.setIndex(fidx);
+  var flag = new THREE.Mesh(flagGeo, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, emissive: '#5a1800' }));
+  flag.position.set(FX, FY1 - 0.04, PZ);
+  flag.frustumCulled = false;
+  group.add(flag);
+  function waveFlag(time) {
+    for (var k = 0; k <= FN; k++) {
+      var u = k / FN, x = u * FL, w = Math.sin(time * 3.1 - u * 5.2) * 0.09 * u + Math.sin(time * 1.7 - u * 3) * 0.04 * u;
+      var hh = FHt * (1 - u * 0.96);
+      fpos[k * 6] = x; fpos[k * 6 + 1] = -u * 0.06; fpos[k * 6 + 2] = w;
+      fpos[k * 6 + 3] = x; fpos[k * 6 + 4] = -hh - u * 0.06 * (1 - u); fpos[k * 6 + 5] = w * 0.9;
+    }
+    flagGeo.attributes.position.needsUpdate = true;
+    flagGeo.computeVertexNormals();
+  }
+  waveFlag(0);
   // Inside the pavilion: a warm glow, and a toran on its front arch.
   if (!dawn) halos.add(0, PH0 + 1.5, PZ, 0, 0.5, 0, 3.4, cWarm);
   swag([-PW + 0.3, PT - 0.25, PZ + PW + 0.2], [PW - 0.3, PT - 0.25, PZ + PW + 0.2], 0.35, small ? 14 : 22, function (x, y, z, t, kk) {
@@ -275,7 +337,7 @@ export function build(W, opts) {
   });
 
   // ── Garlands and fairy lights strung across the court ──────────────────
-  var cross = dawn ? [-5.5, -14.5, -21.5] : [-5.5, -22, -31.4];
+  var cross = dawn ? [-4.6, -9.6, -14.2] : [-5.5, -22, -31.4];   // at dawn, all behind the shrine's camera
   cross.forEach(function (z, i) {
     var a = [-AX + 0.3, AH + 0.9, z], b = [AX - 0.3, AH + 0.9, z];
     G.garlandTo(a, b, 1.5 + (i % 2) * 0.3, small ? 46 : 70, 0.07);
@@ -410,6 +472,7 @@ export function build(W, opts) {
   var on = dawn ? 1 : 0, tmpC = col('#000');
   function frame(f) {
     var P = f.P, time = f.time;
+    if (!f.reduce) waveFlag(time);
     // Lamps burn through dawn and go out as the morning brightens.
     var lit = dawn ? 1 - smooth(7.0, 9.5, (f.tod % 24 + 24) % 24) * 0.7 : 0;
     U.uTime.value = time; U.uScale.value = f.pxScale; U.uFogD.value = f.fogD * 0.5;
@@ -422,8 +485,11 @@ export function build(W, opts) {
       var fl = f.reduce ? 1 : 0.85 + 0.15 * Math.sin(time * 9) * Math.sin(time * 5.3);
       for (var ti2 = 0; ti2 < towers.length; ti2++) W.lamp(o.x + towers[ti2][0], 3.2 * towers[ti2][2], o.z + towers[ti2][1], '#ff9a48', (dawn ? 5 : 9) * lit * fl, 14, 1.6);
       W.lamp(o.x, PH0 + 2, o.z + PZ, '#ffa858', 5 * lit, 11, 1.6);
-      W.lamp(o.x - AX + 0.8, 2.4, o.z - 12, '#ffa050', 3.2 * lit, 9, 1.8);
-      W.lamp(o.x + AX - 0.8, 2.4, o.z - 12, '#ffa050', 3.2 * lit, 9, 1.8);
+      // The arcade lamps light the way in; once the camera is past them (at
+      // the shrine) they give their place in the light pool to the shrine's.
+      var past = smooth(o.z - 15, o.z - 9, W.camera.position.z);
+      W.lamp(o.x - AX + 0.8, 2.4, o.z - 12, '#ffa050', 3.2 * lit * past, 9, 1.8);
+      W.lamp(o.x + AX - 0.8, 2.4, o.z - 12, '#ffa050', 3.2 * lit * past, 9, 1.8);
     }
   }
 

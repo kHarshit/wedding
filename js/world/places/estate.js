@@ -16,7 +16,7 @@
  * the two never overlap.
  */
 import { THREE, clamp, lerp, smooth, rng, col, box, cyl, Garlands, PointSet, pointKit, GLOW_F, HALO_F, broadleaf,
-         treeMesh, groundShade, onionDome , Q, tag } from '../lib.js';
+         treeMesh, groundShade, onionDome, shikhara, Q, tag } from '../lib.js';
 import { tinted, merge } from '../../immersive/kit.js';
 import { keyed, cols } from '../timeline.js';
 import { COURT_DAWN, HOMES, TERRACE, STORY, HALDI, BARAAT, HALL, PAVILION, PIN, groundH } from '../land.js';
@@ -103,10 +103,16 @@ export function build(W) {
   part('court', function (g) {
     var o = COURT_DAWN;
     walledCourt(g, o.x, o.z, o.z - 46, 15, 6.2, SAND, {});
-    // Pool, pavilion and dome, and the gate's portal and turrets.
+    // Pool, pavilion and its temple tower, and the gate's portal and turrets.
     box(g, -4.4, 4.4, 0.05, 0.3, o.z - 24.2, o.z - 12.2, '#2a4a58');
     box(g, -4.4, 4.4, 0, 4.6, o.z - 41.6, o.z - 32.8, SAND2);
-    g.push(onionDome(2.2, 6.3, DOME, 12).translate(0, 0, o.z - 37.2));
+    var tz = o.z - 37.2, gold = [];
+    box(g, -2.3, 2.3, 4.6, 6.25, tz - 2.3, tz + 2.3, '#f0c9b0');
+    shikhara(g, gold, { x: 0, z: tz, y0: 6.25, B: 2.1, H: 5.5, n: 4, detail: 0, top: 0.36, color: '#f6d4be', seg: 6, kalash: 0.95, kseg: 6 });
+    [[0, 1], [1, 0], [-1, 0]].forEach(function (d) {
+      shikhara(g, gold, { x: d[0] * 2.12, z: tz + d[1] * 2.12, y0: 6.25, B: 0.98, H: 3.0, n: 2, detail: 0, top: 0.36, color: '#f6d4be', seg: 5, kalash: 0.45, kseg: 5 });
+    });
+    gold.forEach(function (k) { g.push(tinted(k, '#d9a441')); });
     box(g, -3.4, 3.4, 0, 8.9, o.z - 0.2, o.z + 0.6, SAND2);
     [-6.4, 6.4].forEach(function (x) { g.push(tinted(new THREE.CylinderGeometry(1.2, 1.4, 8.6, 8).translate(x, 4.3, o.z + 0.3), SAND2)); g.push(onionDome(1.0, 8.9, DOME, 8).translate(x, 0, o.z + 0.3)); });
     for (var k = 0; k < 10; k++) lamp((k - 4.5) * 0.9, 0.4, o.z + 3 + k * 0.8, 0.9);
