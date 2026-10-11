@@ -79,10 +79,11 @@ export function build(W) {
   function lamp(x, y, z, size, k) { lights.add(x, y, z, k == null ? 1 : k, r(), partIdx, size || 1, cWarm[(r() * 4) | 0]); }
   function walledCourt(g, cx, z0, z1, hw, h, wall, opts) {
     var t = 0.9;
-    box(g, cx - hw, cx + hw, 0, h, z0 - t, z0, wall); box(g, cx - hw, cx + hw, 0, h, z1, z1 + t, wall);
+    if (!opts.noFront) box(g, cx - hw, cx + hw, 0, h, z0 - t, z0, wall);
+    box(g, cx - hw, cx + hw, 0, h, z1, z1 + t, wall);
     box(g, cx - hw, cx - hw + t, 0, h, z1, z0, wall); box(g, cx + hw - t, cx + hw, 0, h, z1, z0, wall);
     box(g, cx - hw + t, cx + hw - t, 0, 0.05, z1 + t, z0 - t, opts.floor || '#e6cfa6');
-    [[cx - hw, z0], [cx + hw, z0], [cx - hw, z1], [cx + hw, z1]].forEach(function (c) {
+    [[cx - hw, z0], [cx + hw, z0], [cx - hw, z1], [cx + hw, z1]].slice(opts.noFront ? 2 : 0).forEach(function (c) {
       g.push(tinted(new THREE.CylinderGeometry(1.2, 1.35, h + 2, 8).translate(c[0], (h + 2) / 2, c[1]), SAND2));
       g.push(onionDome(0.95, h + 2, DOME, 8).translate(c[0], 0, c[1]));
     });
@@ -102,7 +103,7 @@ export function build(W) {
 
   part('court', function (g) {
     var o = COURT_DAWN;
-    walledCourt(g, o.x, o.z, o.z - 46, 15, 6.2, SAND, {});
+    walledCourt(g, o.x, o.z, o.z - 46, 15, 6.2, SAND, { noFront: true });
     // Pool, pavilion and its temple tower, and the gate's portal and turrets.
     box(g, -4.4, 4.4, 0.05, 0.3, o.z - 24.2, o.z - 12.2, '#2a4a58');
     box(g, -4.4, 4.4, 0, 4.6, o.z - 41.6, o.z - 32.8, SAND2);
@@ -113,8 +114,15 @@ export function build(W) {
       shikhara(g, gold, { x: d[0] * 2.12, z: tz + d[1] * 2.12, y0: 6.25, B: 0.98, H: 3.0, n: 2, detail: 0, top: 0.36, color: '#f6d4be', seg: 5, kalash: 0.45, kseg: 5 });
     });
     gold.forEach(function (k) { g.push(tinted(k, '#d9a441')); });
-    box(g, -3.4, 3.4, 0, 8.9, o.z - 0.2, o.z + 0.6, SAND2);
-    [-6.4, 6.4].forEach(function (x) { g.push(tinted(new THREE.CylinderGeometry(1.2, 1.4, 8.6, 8).translate(x, 4.3, o.z + 0.3), SAND2)); g.push(onionDome(1.0, 8.9, DOME, 8).translate(x, 0, o.z + 0.3)); });
+    // The floral gateway: an arch of marigolds between walls of flowers, drapes either side.
+    var arch = new THREE.Shape(), ap = [[-2.9, 0], [-1.7, 0], [-1.7, 4.2], [-1.0, 5.7], [0, 6.35], [1.0, 5.7], [1.7, 4.2], [1.7, 0], [2.9, 0], [2.9, 4.4], [2.0, 6.6], [0, 7.6], [-2.0, 6.6], [-2.9, 4.4]];
+    arch.moveTo(ap[0][0], ap[0][1]); ap.forEach(function (p) { arch.lineTo(p[0], p[1]); });
+    g.push(tinted(new THREE.ExtrudeGeometry(arch, { depth: 1.75, bevelEnabled: false }).translate(0, 0, o.z - 1.15), '#f08a1c'));
+    box(g, -1.7, 1.7, 0, 4.2, o.z - 1.15, o.z - 1.05, '#eedcb8');
+    [-1, 1].forEach(function (s) {
+      box(g, s * 2.85, s * 6.6, 0, 3.4, o.z + 0.08, o.z + 0.42, '#d6336c');
+      box(g, s * 2.95, s * 15.2, 0, 6.15, o.z - 1.6, o.z - 1.4, '#f4dccb');
+    });
     for (var k = 0; k < 10; k++) lamp((k - 4.5) * 0.9, 0.4, o.z + 3 + k * 0.8, 0.9);
     lamp(0, 2.6, o.z - 39, 2.4);
   });

@@ -104,9 +104,8 @@ export function build(W, opts) {
   group.add(run2);
 
   // ── Walls ──────────────────────────────────────────────────────────────
-  // The gate wall with its doorway (the gate place dresses its outside).
-  var gw = notchShape(-HW, HW, WH, [pointedArch(3.4, 4.2, 6.0, 0, 0, 16)]);
-  g.push(tinted(new THREE.ExtrudeGeometry(gw, { depth: 1.2, bevelEnabled: false }).translate(0, 0, -1.2), PAL.wall));
+  // The front is the gate's: a floral gateway with its doors, closed either
+  // side by tall drapes (gate.js). Garden piers stand at its corners.
   // Side and far walls.
   box(g, -HW, -IN, 0, WH, -D, -1.2, PAL.wall);
   box(g, IN, HW, 0, WH, -D, -1.2, PAL.wall);
@@ -114,21 +113,25 @@ export function build(W, opts) {
   var far = notchShape(-HW, HW, WH, [pointedArch(4.0, 3.6, 5.7, 0, 0, 16)]);
   g.push(tinted(new THREE.ExtrudeGeometry(far, { depth: 1, bevelEnabled: false }).translate(0, 0, -D), PAL.wall));
   // Copings, plinths and merlons all round.
-  [[-HW - 0.15, HW + 0.15, -1.35, 0.15], [-HW - 0.15, HW + 0.15, -D - 0.15, -D + 1.15]].forEach(function (s) {
-    box(g, s[0], s[1], WH, WH + 0.25, s[2], s[3], PAL.trim);
-    box(g, s[0], s[1], 0, 0.45, s[2], s[3], PAL.stone);
-  });
+  box(g, -HW - 0.15, HW + 0.15, WH, WH + 0.25, -D - 0.15, -D + 1.15, PAL.trim);
+  box(g, -HW - 0.15, HW + 0.15, 0, 0.45, -D - 0.15, -D + 1.15, PAL.stone);
   [-1, 1].forEach(function (s) {
     box(g, s * IN - 0.15 * s, s * HW + 0.15 * s, WH, WH + 0.25, -D - 0.15, 0.15, PAL.trim);
     box(g, s * IN - 0.15 * s, s * HW + 0.15 * s, 0, 0.45, -D - 0.15, 0.15, PAL.stone);
   });
-  for (var mx = -HW; mx <= HW + 0.01; mx += 0.8) {
-    box(g, mx - 0.18, mx + 0.18, WH + 0.25, WH + 0.75, -0.95, -0.25, PAL.trim);
-    box(g, mx - 0.18, mx + 0.18, WH + 0.25, WH + 0.75, -D + 0.25, -D + 0.85, PAL.trim);
-  }
+  for (var mx = -HW; mx <= HW + 0.01; mx += 0.8) box(g, mx - 0.18, mx + 0.18, WH + 0.25, WH + 0.75, -D + 0.25, -D + 0.85, PAL.trim);
   for (var mz = -1.6; mz >= -D + 0.4; mz -= 0.8) [-1, 1].forEach(function (s) { box(g, s * (HW - 0.5) - 0.18, s * (HW - 0.5) + 0.18, WH + 0.25, WH + 0.75, mz - 0.18, mz + 0.18, PAL.trim); });
-  // Corner towers with little domes, for the views from above.
-  [[-HW, -0.6], [HW, -0.6], [-HW, -D + 0.5], [HW, -D + 0.5]].forEach(function (c) {
+  // At the front corners, garden piers with lotus caps; at the back, towers
+  // with little domes, for the views from above.
+  [-1, 1].forEach(function (s) {
+    var cx = s * HW, cz = -0.6, ph = 3.4;
+    box(g, cx - 0.75, cx + 0.75, 0, ph, cz - 0.75, cz + 0.75, PAL.wall2);
+    box(g, cx - 0.9, cx + 0.9, ph, ph + 0.18, cz - 0.9, cz + 0.9, PAL.trim);
+    g.push(tinted(new THREE.CylinderGeometry(0.42, 0.6, 0.4, 10).translate(cx, ph + 0.38, cz), PAL.trim));
+    g.push(tinted(new THREE.SphereGeometry(0.42, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2).translate(cx, ph + 0.58, cz), PAL.dome));
+    g.push(tinted(new THREE.ConeGeometry(0.08, 0.4, 6).translate(cx, ph + 1.15, cz), '#d9a441'));
+  });
+  [[-HW, -D + 0.5], [HW, -D + 0.5]].forEach(function (c) {
     g.push(tinted(new THREE.CylinderGeometry(1.25, 1.45, WH + 2, 14).translate(c[0], (WH + 2) / 2, c[1]), PAL.wall2));
     g.push(tinted(new THREE.CylinderGeometry(1.5, 1.5, 0.3, 14).translate(c[0], WH + 2.1, c[1]), PAL.trim));
     g.push(tinted(new THREE.SphereGeometry(1.15, 14, 7, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.2, 1).translate(c[0], WH + 2.25, c[1]), PAL.dome));
