@@ -25,7 +25,7 @@
  *          loops seven times round the fire.
  *   IV     the whole place lit: fairy lights curtain both houses and swing
  *          between them, rings of diyas, sky lanterns rising, fireworks.
- *   Outro  Deeksha & Harshit.
+ *   Outro  Harshit & Deeksha.
  *
  * Keyframes are pinned to the panels by keys(); columns are named in C.
  */
@@ -708,7 +708,7 @@ function buildDom(chapters) {
     return p;
   });
   var outro = el('div', 'si-beat si-outro',
-    '<p class="si-label">And so it begins</p><p class="si-names">Deeksha <span class="amp">&amp;</span> Harshit</p>' + rule +
+    '<p class="si-label">And so it begins</p><p class="si-names">Harshit <span class="amp">&amp;</span> Deeksha</p>' + rule +
     '<p class="si-date">10 &middot; March &middot; 2027</p>');
   text.appendChild(outro);
 

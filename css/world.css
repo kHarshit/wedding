@@ -270,6 +270,35 @@ html:has(body.world-on){transition:--world-ink .4s ease,--world-ink-soft .4s eas
 /* The footer: a solid panel and the hour's ink for its small lines. */
 .world-on footer .container{--glass:var(--panel)}
 .world-on footer .f-sub,.world-on .credit,.world-on .social a{color:var(--ink-mid);opacity:1}
+/* Both names on one line, sized to the footer's panel. */
+.world-on footer .f-name{font-size:clamp(2rem,8.5vw,3.6rem)}
 .world-on .credit a,.world-on .credit b{color:var(--ink-gold);font-weight:600}
 .world-on .social a svg{stroke:var(--ink-gold)}
 .world-on #particles{display:none}
+
+/* ══ The shloka, on the scene ════════════════════════════════════════════
+   The only block that sits straight on the world (as the story's words do)
+   rather than on glass: cream Devanagari with a warm glow on a soft shade
+   that holds over the words and fades to nothing. It keeps the glass card's
+   place: left of the shrine on wide screens, above it on phones. Still
+   >= 4.5:1 against what is behind it. */
+.world-on .gan-in{
+  --scene-ink:#fff4e0;--scene-gold:#ffdf9e;
+  --scene-glow:0 0 1px rgba(30,12,6,.95),0 0 3px rgba(30,12,6,.9),0 0 7px rgba(30,12,6,.8),0 0 14px rgba(30,12,6,.6),0 1px 26px rgba(30,12,6,.5),0 0 40px rgba(255,170,80,.18);
+  position:relative;isolation:isolate;
+  background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+.world-on .gan-in::before{
+  content:"";position:absolute;inset:-4rem -5.6rem;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(44,20,10,.8) 0%,rgba(44,20,10,.76) 50%,rgba(44,20,10,.48) 70%,rgba(44,20,10,.2) 86%,rgba(44,20,10,0) 100%);
+}
+.world-on main .gan-in *{text-shadow:var(--scene-glow)!important}
+.world-on .mantra{color:var(--scene-ink);text-shadow:var(--scene-glow),0 0 26px rgba(255,170,70,.5)!important}
+.world-on .gan-cap{color:var(--scene-gold)}
+.world-on .gan-mid .dot{background:var(--scene-gold)}
+/* Wide screens: a little further in from the edge, closer to the shrine. */
+@media (min-width:900px){.world-on .gan-outer{padding-left:max(10vw,60px)}}
+/* Phones: the shade must not run off the screen's sides as a band. */
+@media (max-width:640px){.world-on .gan-in::before{inset:-3rem -.6rem}}
+.world-on #invite{overflow-x:clip}
