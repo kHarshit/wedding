@@ -20,10 +20,16 @@ body.world-on{background:#1a1020}
 /* ── The gate ──
    While three.js loads, a still of the 3D doors stands in for them (the
    video keeps doors.webp for its own fallback); it fades as the live doors
-   take over, so the hand-over is seamless. */
+   take over, so the hand-over is seamless. The ?v= is bumped whenever the
+   stills are re-rendered, so no browser keeps showing an old one. */
 .world-likely #intro::before{content:"";position:absolute;inset:0;pointer-events:none;
-  background:#0b0c22 url(../assets/images/gate-tall.webp) center/cover no-repeat;transition:opacity 1.2s ease}
-@media (min-aspect-ratio:1/1){.world-likely #intro::before{background-image:url(../assets/images/gate-wide.webp)}}
+  background:#0b0c22 url(../assets/images/gate-tall.webp?v=3) center/auto 100% no-repeat;transition:opacity 1.2s ease}
+/* On a phone the 3D gate keeps its height and shows more or less at the sides
+   as the screen is narrower or wider (a browser's toolbars make it shorter),
+   so the tall still (rendered wider than any phone) is fitted to the screen's
+   height and cropped at the sides the same way. Squarer screens: cover. */
+@media (min-aspect-ratio:7/10){.world-likely #intro::before{background-size:cover}}
+@media (min-aspect-ratio:1/1){.world-likely #intro::before{background-image:url(../assets/images/gate-wide.webp?v=3)}}
 .world-likely #intro video{visibility:hidden}
 .world-gate #intro{background:transparent}
 .world-gate #intro::before{opacity:0}

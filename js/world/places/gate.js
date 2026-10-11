@@ -698,11 +698,12 @@ export function build(W, opts) {
   var aspect = 1;
   var OPEN_S = 2.6, PUSH0 = 0.55, PUSH1 = 6.4, BEGIN = 5.5, TOD0 = 5.6;
 
-  // The camera before the tap: square on, a little below the toran.
+  // The camera before the tap: square on, a little below the toran. On wide
+  // screens it stands closer, so the arch fills the frame rather than sky.
   function closedPose(out) {
-    var z = lerp(12, 15.5, smooth(0.5, 1.45, aspect));
+    var z = lerp(12, 11, smooth(0.5, 1.45, aspect));
     out.pos.set(o.x, 1.62, o.z + z);
-    out.tgt.set(o.x, lerp(4.5, 4.35, smooth(0.5, 1.45, aspect)), o.z);
+    out.tgt.set(o.x, lerp(4.5, 4.0, smooth(0.5, 1.45, aspect)), o.z);
   }
 
   function doorAngle(a) {
