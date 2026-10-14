@@ -20,6 +20,11 @@ and the time of day.
   [`css/world.css`](css/world.css).
 - The music starts with the site: on load where the browser allows sound,
   otherwise on the first tap, swipe or key.
+- Previous / Next buttons at the bottom right ([`js/sections.js`](js/sections.js))
+  glide the page to the previous or next moment (the shloka, each family, the
+  countdown, each story chapter, each event, the venue, the RSVP, the footer)
+  like a camera move. Guests can still scroll freely; any touch or scroll ends
+  a glide. With `prefers-reduced-motion` they jump instead of gliding.
 
 ### When the original (cream) site shows instead
 

@@ -812,5 +812,15 @@ export function mount(W) {
   }
   // If the world fails before the scene is built, give the list back too.
   W.onFail(function () { if (!built && dom.track.parentNode) { dom.track.remove(); section.classList.remove('si-on'); } });
-  return { stop: stop, build: buildScene, fit: fitScreen };
+  // Where Previous / Next (js/sections.js) land in the story: the intro, each
+  // chapter and the names, each at the middle of the stretch where it reads
+  // fully (see updateText).
+  function beats() {
+    stop.range(window.innerHeight);
+    var at = [['story-intro', 0.34, dom.intro]];
+    dom.panels.forEach(function (p, i) { at.push(['chapter-' + (i + 1), S(i) + FADE + READ / 2, p]); });
+    at.push(['story-names', (E(3) + 0.28 + TOTAL - 0.05) / 2, dom.outro]);
+    return at.map(function (b) { return { key: b[0], y: trackTop + b[1] * sh, el: b[2] }; });
+  }
+  return { stop: stop, build: buildScene, fit: fitScreen, beats: beats };
 }

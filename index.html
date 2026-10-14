@@ -497,6 +497,15 @@
 
 <!-- After the page in the focus order: the RSVP shortcut, then the music. -->
 <a id="skipRsvp" class="skip-rsvp" href="#rsvp" aria-label="Skip to the RSVP">RSVP <span aria-hidden="true">&darr;</span></a>
+<!-- Previous / Next moment (js/sections.js), bottom right; shown once the doors have opened. -->
+<div class="sec-nav">
+  <button id="secPrev" class="sec-btn" type="button" aria-label="Previous section" aria-hidden="true" tabindex="-1">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 10.2 8 5.7l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <button id="secNext" class="sec-btn" type="button" aria-label="Next section" aria-hidden="true" tabindex="-1">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 5.8 8 10.3l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</div>
 <button id="music" aria-label="Play music" aria-pressed="false" tabindex="-1" style="opacity:0;transform:scale(.85)">
   <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
 </button>
@@ -511,6 +520,7 @@
 <script src="js/scroll-cue.js"></script>
 <script src="js/rsvp.js"></script>
 <script src="js/skip-rsvp.js"></script>
+<script src="js/sections.js"></script>
 <!-- If the world's entry file fails to arrive, ask once more under another name
      (a failed module URL is remembered); if that fails too, the cream site stays. -->
 <script type="module" src="js/world/main.js" onerror="var s=document.createElement('script');s.type='module';s.src='js/world/main.js?retry=1';s.onerror=function(){document.documentElement.classList.remove('world-likely');};document.body.appendChild(s);"></script>

@@ -143,6 +143,8 @@ function start() {
     gaveUp = true;
     if (err && !quiet) console.warn('[world] not starting:', err && err.message || err);
     intro.useGate(null);
+    if (window.weddingSections) window.weddingSections.useWorld(null);
+    storyBeats = null;
     root.classList.remove('world-likely');
     splitInvitation(false);
     if (themeMeta) themeMeta.setAttribute('content', themeCream);
@@ -238,6 +240,7 @@ function start() {
     if (W.dead()) return;
     splitInvitation(true);
     body.classList.add('world-on', 'world-gate');
+    tellSections();
     if (themeMeta) themeMeta.setAttribute('content', '#1a1020');
     // Fetch the next places' code while the guest reads the names.
     storyModule = need('./places/story.js');
@@ -246,7 +249,30 @@ function start() {
     if (pending) { var p = pending; pending = null; document.getElementById('intro').classList.remove('world-wait'); openDoors(p.done); }
   }).catch(function (err) { giveUp(err); });
 
-  var storyModule = null, homesMod = null, terraceMod = null;
+  var storyModule = null, homesMod = null, terraceMod = null, storyBeats = null;
+  // Previous / Next (js/sections.js) land inside the stops' ranges and on the
+  // story's panels, and wait for a place to be built before gliding into it.
+  function tellSections() {
+    var A = window.weddingSections;
+    if (!A) return;
+    A.useWorld({
+      measure: function () { if (W && !W.dead()) W.timeline.measure(window.innerHeight); },
+      range: function (name) {
+        var st = W.timeline.stops;
+        for (var i = 0; i < st.length; i++) if (st[i].name === name) return [st[i].y0, st[i].y1];
+        return null;
+      },
+      story: function () { return storyBeats && !W.dead() ? storyBeats() : null; },
+      // true when every place on the way from y a to y b is built, else a promise for them.
+      ready: function (a, b) {
+        if (!W || W.dead()) return true;
+        var lo = Math.min(a, b), hi = Math.max(a, b), names = {}, waits = [];
+        W.timeline.stops.forEach(function (s) { if (s.y1 >= lo - 1 && s.y0 <= hi + 1) s.places.forEach(function (n) { names[n] = true; }); });
+        Object.keys(names).forEach(function (n) { if (W.place(n)) return; var p = W.ensure(n); if (p && p.then) waits.push(p); });
+        return waits.length ? Promise.all(waits) : true;
+      }
+    });
+  }
   // Each celebration's camera comes with its code; until then a stand-in on its axis.
   var celebPoses = {}, CELEB_Z = { haldi: -92, baraat: -140, hall: -198 }, CELEB_TOD = { haldi: 9.2, baraat: 18.4, hall: 21.8 };
   var closePoses = {};
@@ -285,6 +311,7 @@ function start() {
         if (W.dead()) return;
         var m = S.mount(W);
         if (!m) return;
+        storyBeats = m.beats;
         W.timeline.add(m.stop);
         W.define('story', m.build);
         W.poke();
